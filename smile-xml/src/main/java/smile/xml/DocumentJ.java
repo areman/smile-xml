@@ -37,6 +37,7 @@ public class DocumentJ extends BaseJ<Document> {
 			return new DocumentJ(runtime, klass);
 		}
 	};
+	
 	private String version;
 	private String encoding;
 
