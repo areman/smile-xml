@@ -1,0 +1,63 @@
+<project default="create.jar">
+
+	<path id="project.class.path">
+		
+		<fileset dir="lib">
+			<include name="jruby-complete-1.6.5.1.jar" />
+		</fileset>
+
+	</path>
+
+	<target name="create.jar">
+
+		<!--delete dir="ant_build"/-->
+
+		<mkdir dir="ant_build" />
+
+		<javac target="1.5" source="1.5" 
+			srcdir="src/main/java" 
+			destdir="ant_build" 
+			debug="on" includeantruntime="true">
+			<classpath refid="project.class.path" />
+		</javac>
+
+		<mkdir dir="dist/lib" />
+		
+		<jar destfile="dist/lib/smile-xml.jar">
+			<fileset dir="ant_build" />
+		</jar>
+
+		<!--delete dir="ant_build"/-->
+	</target>
+
+	<target name="create.gem" depends="create.jar">
+
+		<copy todir="dist/lib">
+			<fileset dir="src/main/ruby">
+				<include name="**/*.rb"/>
+			</fileset>
+		</copy>
+
+		<copy todir="dist">
+			<fileset dir=".">
+				<include name="src/**/*.*"/>
+			</fileset>
+		</copy>
+
+		<java classname="org.jruby.Main" classpathref="project.class.path">
+			<arg value="-S"/>
+			<arg value="gem"/>
+			<arg value="build"/>
+			<arg value="smile-xml.gemspec"/>
+		</java>
+		
+	</target>
+
+	<target name="clean">
+
+		<delete dir="ant_build"/>
+		<delete dir="dist"/>
+		
+	</target>
+
+</project>
