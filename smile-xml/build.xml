@@ -3,7 +3,7 @@
 	<path id="project.class.path">
 		
 		<fileset dir="lib">
-			<include name="jruby-complete-1.6.5.1.jar" />
+			<include name="jruby-complete-1.6.7.2.jar" />
 		</fileset>
 
 	</path>
@@ -49,6 +49,16 @@
 			<arg value="gem"/>
 			<arg value="build"/>
 			<arg value="smile-xml.gemspec"/>
+		</java>
+		
+	</target>
+	
+	<target name="publish" depends="clean, create.gem">
+		<java classname="org.jruby.Main" classpathref="project.class.path">
+			<arg value="-S"/>
+			<arg value="gem"/>
+			<arg value="push"/>
+			<arg value="dist/smile-xml-1.0.1.gem"/>
 		</java>
 		
 	</target>
