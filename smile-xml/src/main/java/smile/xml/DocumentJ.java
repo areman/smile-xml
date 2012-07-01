@@ -241,7 +241,7 @@ public class DocumentJ extends BaseJ<Document> {
 		SchemaJ schema = (SchemaJ) args[0];
 
 		Validator validator = ((Schema) schema.getJavaObject()).newValidator();
-		final Block handler = ErrorJ.getErrorHandler(context);
+		final Block handler = ErrorJ.getErrorHandler(context, null);
 		final AtomicBoolean b = new AtomicBoolean(true);
 		if ((handler != null) || (block != null))
 			validator.setErrorHandler(new ErrorHandler() {

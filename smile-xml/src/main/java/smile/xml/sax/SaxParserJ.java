@@ -1,17 +1,21 @@
 package smile.xml.sax;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
+import org.jruby.RubyException;
 import org.jruby.RubyHash;
 import org.jruby.RubyModule;
 import org.jruby.RubyObject;
 import org.jruby.RubyString;
 import org.jruby.anno.JRubyMethod;
+import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -23,6 +27,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.ext.DefaultHandler2;
 import org.xml.sax.helpers.XMLReaderFactory;
+
+import smile.xml.ErrorJ;
 import smile.xml.util.UtilJ;
 
 public class SaxParserJ extends RubyObject
@@ -48,21 +54,32 @@ public class SaxParserJ extends RubyObject
   }
 
   @JRubyMethod(name={"string"}, module=true)
-  public static IRubyObject fromString(ThreadContext context, IRubyObject pString) {
+  public static IRubyObject fromString(ThreadContext context, IRubyObject self, IRubyObject pString) {
+	  if( pString.isNil() )
+		  throw context.getRuntime().newTypeError("wrong argument type nil (expected String)");
+
     SaxParserJ parser = new SaxParserJ(context);
     parser.string = ((RubyString)pString);
     return parser;
   }
 
-  @JRubyMethod(name={"file"}, module=true)
-  public static IRubyObject fromFile(ThreadContext context, IRubyObject pFile) {
+  @JRubyMethod(name="file", module=true)
+  public static IRubyObject fromFile(ThreadContext context, IRubyObject self, IRubyObject pFile) {
+	  
+	  if( pFile.isNil() )
+		  throw context.getRuntime().newTypeError("can't convert nil into String");
+	  
+	  if( new File( pFile.asJavaString() ).exists() == false ) {
+		  throw ErrorJ.newInstance( context, "Warning: failed to load external entity \""+ pFile.asJavaString() + "\"." );
+	  }
+		  
     SaxParserJ parser = new SaxParserJ(context);
     parser.fileName = ((RubyString)pFile);
     return parser;
   }
 
   @JRubyMethod(name={"io"}, module=true)
-  public static IRubyObject fromIo(ThreadContext context, IRubyObject pIo) {
+  public static IRubyObject fromIo(ThreadContext context, IRubyObject self, IRubyObject pIo) {
     SaxParserJ parser = new SaxParserJ(context);
     parser.string = ((RubyString)pIo.callMethod(context, "read"));
     return parser;
@@ -121,10 +138,14 @@ public class SaxParserJ extends RubyObject
         return new InputSource(new StringReader(""));
       }
     });
-    xmlReader.setContentHandler(new Handler(context));
+    if( callbacks != null && callbacks.isNil() == false )
+    	xmlReader.setContentHandler(new Handler(context));
     xmlReader.setProperty("http://xml.org/sax/properties/lexical-handler", xmlReader.getContentHandler());
-
+try {
     xmlReader.parse(inputSource);
+} catch( SAXException e ) {
+	throw ErrorJ.newInstance(context, e.getMessage() );
+}
 
     return context.getRuntime().getTrue();
   }

@@ -11,6 +11,8 @@ import smile.xml.xpath.XPathObjectJ;
 
 public class SmileXML {
 	public static void define(Ruby runtime) {
+		
+		try {
 		RubyModule libxml = runtime.fastGetModule("LibXML");
 		if (libxml == null) {
 			libxml = runtime.defineModule("LibXML");
@@ -35,6 +37,8 @@ public class SmileXML {
 		XPathJ.define(runtime);
 		XPathObjectJ.define(runtime);
 		XPathContextJ.define(runtime);
+		
+		ErrorJ.define(runtime);
 
 		RubyClass ns = NamespaceJ.define(runtime);
 		NamespacesJ.define(runtime);
@@ -46,5 +50,9 @@ public class SmileXML {
 		xml.setConstant("NS", ns);
 		
 		runtime.defineGlobalConstant( "XML", xml );
+		} catch( RuntimeException e ) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 }
