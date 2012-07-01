@@ -9,41 +9,42 @@ import smile.xml.xpath.XPathContextJ;
 import smile.xml.xpath.XPathJ;
 import smile.xml.xpath.XPathObjectJ;
 
-public class SmileXML
-{
-  public static void define(Ruby runtime)
-  {
-    RubyModule libxml = runtime.fastGetModule("LibXML");
-    if (libxml == null) {
-      libxml = runtime.defineModule("LibXML");
-    }
+public class SmileXML {
+	public static void define(Ruby runtime) {
+		RubyModule libxml = runtime.fastGetModule("LibXML");
+		if (libxml == null) {
+			libxml = runtime.defineModule("LibXML");
+		}
 
-    RubyModule xml = (RubyModule)libxml.getConstantNoConstMissing("XML");
-    if (xml == null) {
-      xml = runtime.defineModuleUnder("XML", libxml);
-    }
+		RubyModule xml = XmlJ.define(runtime);
+//		RubyModule xml = (RubyModule) libxml.getConstantNoConstMissing("XML");
+//		if (xml == null) {
+//			xml = runtime.defineModuleUnder("XML", libxml);
+//		}
 
-    ParserJ.define(runtime);
-    DocumentJ.define(runtime);
-    NodeJ.define(runtime);
-    NodeSetJ.define(runtime);
-    AttributesJ.define(runtime);
-    AttrJ.define(runtime);
+		ParserJ.define(runtime);
+		DocumentJ.define(runtime);
+		NodeJ.define(runtime);
+		NodeSetJ.define(runtime);
+		AttributesJ.define(runtime);
+		AttrJ.define(runtime);
 
-    SaxParserJ.define(runtime);
-    SaxParserCallbacksJ.define(runtime);
+		SaxParserJ.define(runtime);
+		SaxParserCallbacksJ.define(runtime);
 
-    XPathJ.define(runtime);
-    XPathObjectJ.define(runtime);
-    XPathContextJ.define(runtime);
+		XPathJ.define(runtime);
+		XPathObjectJ.define(runtime);
+		XPathContextJ.define(runtime);
 
-    RubyClass ns = NamespaceJ.define(runtime);
-    NamespacesJ.define(runtime);
+		RubyClass ns = NamespaceJ.define(runtime);
+		NamespacesJ.define(runtime);
 
-    SchemaJ.define(runtime);
+		SchemaJ.define(runtime);
 
-    runtime.addModule(xml);
+		runtime.addModule(xml);
 
-    xml.setConstant("NS", ns);
-  }
+		xml.setConstant("NS", ns);
+		
+		runtime.defineGlobalConstant( "XML", xml );
+	}
 }

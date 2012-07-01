@@ -26,6 +26,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import smile.xml.util.UtilJ;
+import smile.xml.xpath.XPathContextJ;
 import smile.xml.xpath.XPathObjectJ;
 import smile.xml.xpath.XPointerJ;
 
@@ -78,6 +79,14 @@ public class NodeJ extends BaseJ<Node>
 
   @JRubyConstant
   public static final int FRAGMENT_NODE = 11;
+    
+  // TODO
+  @JRubyConstant
+  public static final int SPACE_DEFAULT = -1;
+
+  // TODO
+  @JRubyConstant
+  public static final int SPACE_PRESERVE = -1;
 
   public static RubyClass define(Ruby runtime) { RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML", "XML" });
     RubyClass result = module.defineClassUnder("Node", runtime.getObject(), ALLOCATOR);
@@ -98,6 +107,8 @@ public class NodeJ extends BaseJ<Node>
   {
     return (NodeJ)getRubyClass(context.getRuntime()).newInstance(context, new IRubyObject[] { name, content, namespace }, null);
   }
+
+private boolean outputEscaping = true;
 
   protected NodeJ(Ruby ruby, RubyClass clazz)
   {
@@ -166,20 +177,43 @@ public class NodeJ extends BaseJ<Node>
     return this;
   }
 
-  @JRubyMethod(name={"eql?"}, alias={"==", "equal?"})
-  public RubyBoolean isEql(ThreadContext context, IRubyObject arg) throws Exception
-  {
-    if (arg.isNil()) {
+  @JRubyMethod( name="equal?" )
+  public RubyBoolean isEqlual(ThreadContext context, IRubyObject arg) throws Exception {
+    
+	  if (arg.isNil()) {
       return context.getRuntime().getFalse();
     }
-    if (!(arg instanceof NodeJ)) {
-      throw context.getRuntime().newTypeError("");
-    }
+    
     NodeJ other = (NodeJ)arg;
 
     if (((Node)other.getJavaObject()).equals(getJavaObject())) {
       return context.getRuntime().getTrue();
     }
+
+    return context.getRuntime().getFalse();
+  }
+
+  @JRubyMethod(name={"eql?"}, alias={"=="})
+  public RubyBoolean isEql(ThreadContext context, IRubyObject arg) throws Exception {
+    
+	  if (arg.isNil()) {
+      return context.getRuntime().getFalse();
+    }
+    
+    if (!(arg instanceof NodeJ)) {
+      throw context.getRuntime().newTypeError("");
+    }
+    
+    NodeJ other = (NodeJ)arg;
+
+    if (((Node)other.getJavaObject()).equals(getJavaObject())) {
+      return context.getRuntime().getTrue();
+    }
+
+//    if ( other.getJavaObject().getOwnerDocument().equals( getJavaObject().getOwnerDocument() ) == false ) {
+//        return context.getRuntime().getFalse();
+//      }
+
     boolean r = toString(context, new IRubyObject[0]).equals(other.toString(context, new IRubyObject[0]));
 
     return r ? context.getRuntime().getTrue() : context.getRuntime().getFalse();
@@ -264,20 +298,25 @@ public class NodeJ extends BaseJ<Node>
   }
 
   @JRubyMethod(name={"base_uri"})
-  public RubyString getBaseUri(ThreadContext context)
-  {
-    return context.getRuntime().newString(((Node)getJavaObject()).getBaseURI());
+  public IRubyObject getBaseUri(ThreadContext context) {
+	String uri = getJavaObject().getBaseURI();
+	if( uri == null )
+		return context.getRuntime().getNil();
+    return context.getRuntime().newString( uri );
   }
+  
   @JRubyMethod(name={"base_uri="})
   public void setBaseUri(ThreadContext context, RubyString uri) {
     throw context.getRuntime().newArgumentError("unsupported");
   }
 
-  @JRubyMethod(name={"empty?"})
-  public RubyBoolean isEmpty(ThreadContext context) {
-    boolean r = (((Node)getJavaObject()).getNodeValue() == null) || (((Node)getJavaObject()).getNodeValue().isEmpty());
-
-    return r ? context.getRuntime().getTrue() : context.getRuntime().getFalse();
+  @JRubyMethod(name="empty?")
+  public RubyBoolean isEmpty(ThreadContext context) throws Exception {
+	  
+    boolean r = getJavaObject().getTextContent() == null || getJavaObject().getTextContent().isEmpty();
+    if( r )
+    	r = getChild(context).isNil();
+    return UtilJ.toBool(context, r );
   }
 
   @JRubyMethod(name={"entity_ref?"})
@@ -306,10 +345,18 @@ public class NodeJ extends BaseJ<Node>
   }
 
   @JRubyMethod(name={"first"}, alias={"child"})
-  public NodeJ getChild(ThreadContext context) {
-    NodeJ node = newInstance(context);
-    node.setJavaObject(((Node)getJavaObject()).getFirstChild());
-    return node;
+  public IRubyObject getChild(ThreadContext context) {
+    NodeList list = getJavaObject().getChildNodes();
+    for( int i=0; i<list.getLength(); i++ ) {
+    	NodeJ node;
+    	switch( list.item(i).getNodeType() ) {
+    	case Node.ELEMENT_NODE:
+    	    node = newInstance(context);    
+    	    node.setJavaObject( list.item(i) );
+    	    return node;
+    	}
+    }
+    return context.getRuntime().getNil();
   }
 
   @JRubyMethod(name={"child?"}, alias={"first", "children?"})
@@ -359,6 +406,7 @@ public class NodeJ extends BaseJ<Node>
   {
     return context.getRuntime().newString(((Node)getJavaObject()).getTextContent());
   }
+  
   @JRubyMethod(name={"content="})
   public void setContent(ThreadContext context, IRubyObject pContent) {
     RubyString content = (RubyString)pContent;
@@ -370,13 +418,24 @@ public class NodeJ extends BaseJ<Node>
     return context.getRuntime().newString(((Node)getJavaObject()).getTextContent().trim());
   }
 
-  @JRubyMethod(name={"context"})
-  public IRubyObject getContext(ThreadContext context, IRubyObject pNamespaces)
-  {
-    RubyArray namespaces = (RubyArray)pNamespaces;
+  @JRubyMethod(name="context", rest = true )
+  public IRubyObject getContext(ThreadContext context, IRubyObject[] args ) {
 
-    throw context.getRuntime().newArgumentError("unsupported");
+	  XPathContextJ result = XPathContextJ.newInstance( context, getDoc(context) );	  
+	  result.setNode(context, this);
+
+	  for( IRubyObject arg : args ) {
+		  if( arg instanceof RubyString ) {
+			  IRubyObject[] array = { arg };
+			  result.registerNamespaces( context, array );
+		  } else  {
+			  
+			  throw context.getRuntime().newArgumentError("unsupported");
+		  }
+	  }
+	  return result;
   }
+  
   @JRubyMethod(name={"debug"})
   public RubyBoolean debug(ThreadContext context) {
     return context.getRuntime().getFalse();
@@ -491,7 +550,7 @@ public class NodeJ extends BaseJ<Node>
       hash = (RubyHash)args[0];
     }
 
-    String string = UtilJ.toString((Node)getJavaObject());
+    String string = UtilJ.toString( getJavaObject(), outputEscaping );
     return context.getRuntime().newString(string);
   }
 
@@ -499,7 +558,7 @@ public class NodeJ extends BaseJ<Node>
   public RubyString getInnerXml(ThreadContext context, IRubyObject pHash) throws Exception {
     RubyHash hash = (RubyHash)pHash;
 
-    return context.getRuntime().newString(UtilJ.toString((Node)getJavaObject()));
+    return context.getRuntime().newString(UtilJ.toString( getJavaObject(), outputEscaping ) );
   }
 
   @JRubyMethod(name={"lang"})
@@ -537,11 +596,18 @@ public class NodeJ extends BaseJ<Node>
 
   @JRubyMethod(name={"next"})
   public IRubyObject getNext(ThreadContext context) {
-    if (((Node)getJavaObject()).getNextSibling() == null) {
-      return context.getRuntime().getNil();
+    
+    Node n = getJavaObject().getNextSibling();
+    while( n != null && n.getNodeType() != Node.ELEMENT_NODE ) {
+    	n = n.getNextSibling();
     }
-    NodeJ node = newInstance(context);
-    node.setJavaObject(((Node)getJavaObject()).getNextSibling());
+    
+    if( n == null || n.getNodeType() != Node.ELEMENT_NODE ) {
+    	return context.getRuntime().getNil();
+    }
+    
+    NodeJ node = newInstance(context);    
+    node.setJavaObject( n );
     return node;
   }
   @JRubyMethod(name={"next="})
@@ -610,13 +676,13 @@ public class NodeJ extends BaseJ<Node>
   }
   @JRubyMethod(name={"output_escaping="})
   public void setOutputEscaping(ThreadContext context, IRubyObject pValue) {
-    RubyBoolean value = (RubyBoolean)pValue;
+    this.outputEscaping = ((RubyBoolean)pValue).isTrue();
   }
 
   @JRubyMethod(name={"output_escaping?"})
   public RubyBoolean isOutputEscaping(ThreadContext context)
   {
-    return context.getRuntime().getFalse();
+    return context.getRuntime().newBoolean( outputEscaping );
   }
 
   @JRubyMethod(name={"parent?"})
@@ -706,9 +772,22 @@ public class NodeJ extends BaseJ<Node>
     return context.getRuntime().newFixnum(-1);
   }
 
-  @JRubyMethod(name={"name"})
+  
+  @JRubyMethod(name="space_preserve=")
+  public void setSpacePreserve(ThreadContext context, IRubyObject pValue) {
+	  // TODO
+  }
+
+  @JRubyMethod(name="space_preserve")
+  public IRubyObject getSpacePreserve(ThreadContext context) {
+	  // TODO
+	  return context.getRuntime().newFixnum( SPACE_DEFAULT );
+  }
+
+  @JRubyMethod(name="name")
   public RubyString getName(ThreadContext context) {
-    return context.getRuntime().newString(((Node)getJavaObject()).getLocalName());
+	String name = getJavaObject().getNodeName();
+    return context.getRuntime().newString( name );
   }
 
   @JRubyMethod(name={"name="})

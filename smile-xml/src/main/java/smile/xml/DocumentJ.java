@@ -96,6 +96,11 @@ public class DocumentJ extends BaseJ<Document> {
 		}
 	}
 
+	@JRubyMethod( name="node_type" )
+	public IRubyObject getNodeType( ThreadContext context ) {
+		return context.getRuntime().newFixnum( getJavaObject().getNodeType() );
+	}
+	
 	@JRubyMethod(name = { "root=" })
 	public void setRoot(ThreadContext context, IRubyObject pRoot) {
 		NodeJ node = (NodeJ) pRoot;
@@ -214,7 +219,7 @@ public class DocumentJ extends BaseJ<Document> {
 			}
 		}
 
-		String string = UtilJ.toString((Node) getJavaObject());
+		String string = UtilJ.toString( getJavaObject(), true );
 		return context.getRuntime().newString(string);
 	}
 

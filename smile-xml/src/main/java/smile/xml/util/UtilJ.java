@@ -6,9 +6,11 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
@@ -17,6 +19,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
+
 import org.jruby.Ruby;
 import org.jruby.RubyBoolean;
 import org.jruby.RubyClass;
@@ -68,7 +71,7 @@ public class UtilJ {
 		return schemaFactoryInstance;
 	}
 
-	public static RubyModule getModule(Ruby runtime, String[] path) {
+	public static RubyModule getModule(Ruby runtime, String...path) {
 		RubyModule m = runtime.fastGetModule(path[0]);
 
 		for (int i = 1; i < path.length; i++) {
@@ -82,7 +85,7 @@ public class UtilJ {
 		return m;
 	}
 
-	public static RubyClass getClass(Ruby runtime, String[] path) {
+	public static RubyClass getClass(Ruby runtime, String...path) {
 		if (path.length == 1) {
 			return runtime.fastGetClass(path[0]);
 		}
@@ -109,7 +112,7 @@ public class UtilJ {
 		}
 	}
 
-	public static String toString(Node node) throws Exception {
+	public static String toString(Node node, boolean escape ) throws Exception {
 		StringWriter writer = new StringWriter();
 		try {
 			StreamResult result = new StreamResult(writer);

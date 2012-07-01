@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import org.jruby.Ruby;
 import org.jruby.RubyArray;
@@ -28,147 +29,160 @@ import smile.xml.NodeJ;
 import smile.xml.NodeSetJ;
 import smile.xml.util.UtilJ;
 
-public class XPathObjectJ extends RubyObject
-{
-  private static final long serialVersionUID = 4673137342270845475L;
-  private static final ObjectAllocator ALLOCATOR = new ObjectAllocator()
-  {
-    public IRubyObject allocate(Ruby runtime, RubyClass klass)
-    {
-      return new XPathObjectJ(runtime, klass); }  } ;
-  private String[] namespaces;
-  private RubyString expression;
-  private Node node;
-  private RubyArray result;
+public class XPathObjectJ extends RubyObject {
+	private static final long serialVersionUID = 4673137342270845475L;
+	
+	private static final ObjectAllocator ALLOCATOR = new ObjectAllocator() {
+		public IRubyObject allocate(Ruby runtime, RubyClass klass) {
+			return new XPathObjectJ(runtime, klass);
+		}
+	};
+	
 
-  public static RubyClass define(Ruby runtime) { RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML", "XML", "XPath" });
-    RubyClass result = module.defineClassUnder("Object", runtime.getObject(), ALLOCATOR);
-    result.includeModule(runtime.getModule("Enumerable"));
-    result.defineAnnotatedMethods(XPathObjectJ.class);
-    return result; }
+	public static RubyClass define(Ruby runtime) {
+		RubyModule module = UtilJ.getModule(runtime,"LibXML", "XML", "XPath"  );
+		RubyClass result = module.defineClassUnder("Object",
+				runtime.getObject(), ALLOCATOR);
+		result.includeModule(runtime.getModule("Enumerable"));
+		result.defineAnnotatedMethods(XPathObjectJ.class);
+		return result;
+	}
 
-  private static RubyClass getRubyClass(Ruby runtime)
-  {
-    return UtilJ.getClass(runtime, new String[] { "LibXML", "XML", "XPath", "Object" });
-  }
+	private static RubyClass getRubyClass(Ruby runtime) {
+		return UtilJ.getClass(runtime, "LibXML", "XML", "XPath", "Object");
+	}
 
-  public static XPathObjectJ newInstance(ThreadContext context, IRubyObject expression, IRubyObject document, IRubyObject[] namespaces)
-  {
-    List args = new ArrayList();
-    args.add(expression);
-    args.add(document);
-    args.addAll(Arrays.asList(namespaces));
-    return (XPathObjectJ)getRubyClass(context.getRuntime()).newInstance(context, (IRubyObject[])args.toArray(new IRubyObject[args.size()]), null);
-  }
+	public static XPathObjectJ newInstance(ThreadContext context,
+			IRubyObject expression, IRubyObject document,
+			IRubyObject[] namespaces) {
+		List args = new ArrayList();
+		args.add(expression);
+		args.add(document);
+		args.addAll(Arrays.asList(namespaces));
+		return (XPathObjectJ) getRubyClass(context.getRuntime()).newInstance(
+				context,
+				(IRubyObject[]) args.toArray(new IRubyObject[args.size()]),
+				null);
+	}
 
-  private XPathObjectJ(Ruby runtime, RubyClass metaClass) {
-    super(runtime, metaClass);
-  }
+	private String[] namespaces;
+	private RubyString expression;
+	private Node node;
+	private RubyArray result;
 
-  @JRubyMethod(name={"initialize"}, required=1, rest=true)
-  public void initialize(ThreadContext context, IRubyObject[] args)
-  {
-    this.expression = ((RubyString)args[0]);
-    this.node = ((Node)((BaseJ)args[1]).getJavaObject());
+	private XPathObjectJ(Ruby runtime, RubyClass metaClass) {
+		super(runtime, metaClass);
+	}
 
-    this.namespaces = new String[args.length - 2];
-    for (int i = 2; i < args.length; i++)
-      this.namespaces[(i - 2)] = args[i].asJavaString();
-  }
+	@JRubyMethod(name = { "initialize" }, required = 1, rest = true)
+	public void initialize(ThreadContext context, IRubyObject[] args) {
+		this.expression = ((RubyString) args[0]);
+		this.node = ((Node) ((BaseJ) args[1]).getJavaObject());
 
-  @JRubyMethod(name={"each"})
-  public void iterateOver(ThreadContext context, Block block) throws Exception
-  {
-    RubyArray array = getResult(context);
-    for (Iterator i$ = array.iterator(); i$.hasNext(); ) { Object obj = i$.next();
-      IRubyObject o = (IRubyObject)obj;
-      block.yield(context, o);
-      if (block.isEscaped())
-        break; }
-  }
+		this.namespaces = new String[args.length - 2];
+		for (int i = 2; i < args.length; i++)
+			this.namespaces[(i - 2)] = args[i].asJavaString();
+	}
 
-  @JRubyMethod(name={"length"}, alias={"size"})
-  public RubyFixnum getLength(ThreadContext context) throws Exception
-  {
-    return context.getRuntime().newFixnum(getResult(context).getLength());
-  }
+	@JRubyMethod(name = { "each" })
+	public void iterateOver(ThreadContext context, Block block)
+			throws Exception {
+		RubyArray array = getResult(context);
+		for (Iterator i$ = array.iterator(); i$.hasNext();) {
+			Object obj = i$.next();
+			IRubyObject o = (IRubyObject) obj;
+			block.yield(context, o);
+			if (block.isEscaped())
+				break;
+		}
+	}
 
-  @JRubyMethod(name={"string"})
-  public RubyString getString(ThreadContext context) throws Exception {
-    return this.expression;
-  }
-  @JRubyMethod(name={"first"})
-  public IRubyObject getFirst(ThreadContext context) throws Exception {
-    if (getResult(context).isEmpty())
-      return context.getRuntime().getNil();
-    return (NodeJ)getResult(context).get(0);
-  }
-  @JRubyMethod(name={"last"})
-  public IRubyObject getLast(ThreadContext context) throws Exception {
-    if (getResult(context).isEmpty())
-      return context.getRuntime().getNil();
-    return (NodeJ)getResult(context).last();
-  }
+	@JRubyMethod(name = { "length" }, alias = { "size" })
+	public RubyFixnum getLength(ThreadContext context) throws Exception {
+		return context.getRuntime().newFixnum(getResult(context).getLength());
+	}
 
-  @JRubyMethod(name={"xpath_type"})
-  public IRubyObject getXpathType(ThreadContext context) throws Exception
-  {
-    return context.getRuntime().getNil();
-  }
-  @JRubyMethod(name={"empty?"})
-  public RubyBoolean isEmpty(ThreadContext context) throws Exception {
-    return UtilJ.toBool(context, getResult(context).isEmpty());
-  }
-  @JRubyMethod(name={"set"})
-  public IRubyObject getSet(ThreadContext context) throws Exception {
-    return NodeSetJ.newInstance(context, getResult(context));
-  }
-  @JRubyMethod(name={"to_a"})
-  public IRubyObject toArray(ThreadContext context) throws Exception {
-    return getResult(context);
-  }
+	@JRubyMethod(name ="string")
+	public RubyString getString(ThreadContext context) throws Exception {
+		return this.expression;
+	}
 
-  private RubyArray getResult(ThreadContext context) throws Exception {
-    if (this.result == null)
-      this.result = evaluateExpression(context);
-    return this.result;
-  }
-  @JRubyMethod(name={"[]"})
-  public IRubyObject get(ThreadContext context, IRubyObject pIndex) throws Exception {
-    RubyNumeric index = (RubyNumeric)pIndex;
-    return (IRubyObject)getResult(context).get((int)index.getLongValue());
-  }
+	@JRubyMethod(name = { "first" })
+	public IRubyObject getFirst(ThreadContext context) throws Exception {
+		if (getResult(context).isEmpty())
+			return context.getRuntime().getNil();
+		return (NodeJ) getResult(context).get(0);
+	}
 
-  @JRubyMethod(name={"context"})
-  public IRubyObject getContext(ThreadContext context) {
-    return context.getRuntime().getNil();
-  }
+	@JRubyMethod(name =  "last" )
+	public IRubyObject getLast(ThreadContext context) throws Exception {
+		if (getResult(context).isEmpty())
+			return context.getRuntime().getNil();
+		return (NodeJ) getResult(context).last();
+	}
 
-  private RubyArray evaluateExpression(ThreadContext context) throws Exception
-  {
-    XPath xpath = UtilJ.newXPath();
+	@JRubyMethod(name = { "xpath_type" })
+	public IRubyObject getXpathType(ThreadContext context) throws Exception {
+		return context.getRuntime().getNil();
+	}
 
-    Node nn = (this.node instanceof Document) ? ((Document)this.node).getDocumentElement() : this.node.getOwnerDocument();
+	@JRubyMethod(name = { "empty?" })
+	public RubyBoolean isEmpty(ThreadContext context) throws Exception {
+		return UtilJ.toBool(context, getResult(context).isEmpty());
+	}
 
-    xpath.setNamespaceContext(new CustomNamespaceContext(nn, this.namespaces));
-    NodeList list;
-    try
-    {
-      list = (NodeList)xpath.evaluate(this.expression.asJavaString(), this.node, XPathJ.NODESET);
-    }
-    catch (XPathExpressionException e) {
-      if ((e.getCause() instanceof Exception))
-        throw ((Exception)e.getCause());
-      throw e;
-    }
+	@JRubyMethod(name = { "set" })
+	public IRubyObject getSet(ThreadContext context) throws Exception {
+		return NodeSetJ.newInstance(context, getResult(context));
+	}
 
-    List array = new ArrayList();
-    for (int i = 0; i < list.getLength(); i++) {
-      NodeJ node = NodeJ.newInstance(context);
-      node.setJavaObject(list.item(i));
-      array.add(node);
-    }
+	@JRubyMethod(name = { "to_a" })
+	public IRubyObject toArray(ThreadContext context) throws Exception {
+		return getResult(context);
+	}
 
-    return context.getRuntime().newArray(array);
-  }
+	private RubyArray getResult(ThreadContext context) throws Exception {
+		if (this.result == null)
+			this.result = evaluateExpression(context);
+		return this.result;
+	}
+
+	@JRubyMethod(name = { "[]" })
+	public IRubyObject get(ThreadContext context, IRubyObject pIndex)
+			throws Exception {
+		RubyNumeric index = (RubyNumeric) pIndex;
+		RubyArray result = getResult(context);
+		return (IRubyObject) result.at( index );
+	}
+
+	@JRubyMethod(name = { "context" })
+	public IRubyObject getContext(ThreadContext context) {
+		return context.getRuntime().getNil();
+	}
+
+	private RubyArray evaluateExpression(ThreadContext context) throws Exception {
+		XPath xpath = UtilJ.newXPath();
+
+		Node nn = (this.node instanceof Document) ? ((Document) this.node)
+				.getDocumentElement() : this.node.getOwnerDocument();
+
+		xpath.setNamespaceContext( new CustomNamespaceContext( nn, this.namespaces) );
+		NodeList list;
+		try {
+			list = (NodeList) xpath.evaluate(this.expression.asJavaString(), this.node, XPathJ.NODESET);
+		} catch (XPathExpressionException e) {
+			if ((e.getCause() instanceof Exception))
+				throw ((Exception) e.getCause());
+			throw e;
+		}
+
+		List array = new ArrayList();
+		for (int i = 0; i < list.getLength(); i++) {
+			NodeJ node = NodeJ.newInstance(context);
+			node.setJavaObject(list.item(i));
+			array.add(node);
+		}
+
+		return context.getRuntime().newArray(array);
+	}
 }

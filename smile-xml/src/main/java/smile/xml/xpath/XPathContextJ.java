@@ -45,9 +45,9 @@ public class XPathContextJ extends RubyObject
     return UtilJ.getClass(runtime, new String[] { "LibXML", "XML", "XPath", "Context" });
   }
 
-  public static XPathContextJ newInstance(ThreadContext context)
+  public static XPathContextJ newInstance(ThreadContext context, DocumentJ document )
   {
-    IRubyObject[] args = new IRubyObject[0];
+    IRubyObject[] args = { document };
     return (XPathContextJ)getRubyClass(context.getRuntime()).newInstance(context, args, null);
   }
 
@@ -57,6 +57,7 @@ public class XPathContextJ extends RubyObject
   }
   @JRubyMethod(name={"initialize"}, optional=1)
   public void initialize(ThreadContext context, IRubyObject[] args) {
+	  if( args.length > 0 )
     this.document = ((DocumentJ)args[0]);
   }
   @JRubyMethod(name={"doc"})
