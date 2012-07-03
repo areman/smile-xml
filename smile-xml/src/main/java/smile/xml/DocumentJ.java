@@ -14,6 +14,7 @@ import org.jruby.RubyClass;
 import org.jruby.RubyFixnum;
 import org.jruby.RubyHash;
 import org.jruby.RubyModule;
+import org.jruby.RubyNil;
 import org.jruby.RubyString;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.javasupport.JavaObject;
@@ -28,6 +29,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import smile.xml.util.UtilJ;
+import smile.xml.xpath.XPathContextJ;
 import smile.xml.xpath.XPathObjectJ;
 
 public class DocumentJ extends BaseJ<Document> {
@@ -38,8 +40,8 @@ public class DocumentJ extends BaseJ<Document> {
 		}
 	};
 	
-	private String version;
-	private String encoding;
+	private RubyString version;
+	private EncodingJ encoding;
 
 	public static RubyClass define(Ruby runtime) {
 		RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML",
@@ -91,47 +93,70 @@ public class DocumentJ extends BaseJ<Document> {
 	@JRubyMethod(name = { "initialize" }, optional = 1)
 	public void initialize(ThreadContext context, IRubyObject[] args) {
 		if (args.length > 0) {
-			RubyString xmlVersion = (RubyString) args[0];
-			this.version = xmlVersion.asJavaString();
+			this.version = (RubyString) args[0];
+		} else {
+			this.version = context.getRuntime().newString("1.0");
 		}
 	}
 
 	@JRubyMethod( name="node_type" )
 	public IRubyObject getNodeType( ThreadContext context ) {
-		return context.getRuntime().newFixnum( getJavaObject().getNodeType() );
+		return context.getRuntime().newFixnum( NodeJ.DOCUMENT_NODE );
 	}
 	
 	@JRubyMethod(name = { "root=" })
-	public void setRoot(ThreadContext context, IRubyObject pRoot) {
+	public void setRoot(ThreadContext context, IRubyObject pRoot) throws Exception {
 		NodeJ node = (NodeJ) pRoot;
-		if (getJavaObject() == null)
-			setJavaObject(UtilJ.getBuilder().newDocument());
-		else if (((Document) getJavaObject()).getDocumentElement() != null) {
-			((Document) getJavaObject())
-					.removeChild(((Document) getJavaObject())
-							.getDocumentElement());
+		
+		if( node.isDocPresent() && getJavaObject().equals( node.getJavaObject().getOwnerDocument() ) == false )
+			throw ErrorJ.newRaiseException(context, " Nodes belong to different documents.  You must first import the node by calling XML::Document.import.");
+		
+		if (getJavaObject() == null) {
+			setJavaObject( UtilJ.getBuilder().newDocument() );		
+		} else if( getJavaObject().getDocumentElement() != null) {
+			getJavaObject().removeChild( getJavaObject().getDocumentElement() );
 		}
-
-		((Document) getJavaObject()).appendChild(((Document) getJavaObject())
-				.adoptNode((Node) node.getJavaObject()));
+		//System.out.println( UtilJ.toString( node.getJavaObject(), true ) );
+		getJavaObject().appendChild( getJavaObject().adoptNode( node.getJavaObject() ) );
 	}
 
 	@JRubyMethod(name = { "root" })
 	public NodeJ getRoot(ThreadContext context) {
 		NodeJ node = NodeJ.newInstance(context);
 		node.setJavaObject(((Document) getJavaObject()).getDocumentElement());
+		node.setDocPresent(true);
 		return node;
 	}
 
+	@JRubyMethod(name = "import")
+	public NodeJ adoptNode(ThreadContext context, IRubyObject pNode) {
+		
+		NodeJ node = (NodeJ) pNode;
+		Node newNode = getJavaObject().adoptNode( node.getJavaObject().cloneNode(false) );
+
+		NodeJ result = NodeJ.newInstance(context);
+		result.setJavaObject( newNode );
+		result.setDocPresent(true);
+		return result;
+	}
+	
+	@JRubyMethod(name = { "node_type_name" })
+	public RubyString getNodetypeName(ThreadContext context) throws Exception {
+		
+		return context.getRuntime().newString("document_xml");
+	}
+
 	@JRubyMethod(name = { "canonicalize" })
-	public RubyString canonicalize(ThreadContext context) {
-		throw context.getRuntime().newArgumentError("unsupported");
+	public RubyString canonicalize(ThreadContext context) throws Exception {
+		
+		return toString(context, new IRubyObject[]{} );
 	}
 
 	@JRubyMethod(name = { "child" })
 	public NodeJ getChild(ThreadContext context) {
 		NodeJ node = NodeJ.newInstance(context);
 		node.setJavaObject(((Document) getJavaObject()).getFirstChild());
+		node.setDocPresent( true );
 		return node;
 	}
 
@@ -156,29 +181,31 @@ public class DocumentJ extends BaseJ<Document> {
 		return UtilJ.toBool(context, false);
 	}
 
-	@JRubyMethod(name = { "context" })
-	public IRubyObject context(ThreadContext context, IRubyObject pNamespaces) {
-		NamespacesJ namespaces = (NamespacesJ) pNamespaces;
+	@JRubyMethod(name ="context", optional=1)
+	public IRubyObject getContext(ThreadContext context, IRubyObject[] args ) {
+		if( args.length > 0 ) {
+			NamespacesJ namespaces = (NamespacesJ) args[0];
+		}
 
-		return context.getRuntime().getNil();
+		return XPathContextJ.newInstance(context, this);
 	}
 
 	@JRubyMethod(name = { "encoding" })
 	public IRubyObject getEncoding(ThreadContext context) {
-		return context.getRuntime().newString(this.encoding);
+		return this.encoding;
 	}
 
 	@JRubyMethod(name = { "encoding=" })
 	public void setEncoding(ThreadContext context, IRubyObject value) {
-		if ((value instanceof RubyString)) {
+		if( value instanceof RubyString ) {
 			RubyString encoding = (RubyString) value;
-			this.encoding = encoding.asJavaString();
+			this.encoding = EncodingJ.newInstance(context, encoding.asJavaString() );
+		} else if (value instanceof EncodingJ) {
+			this.encoding = (EncodingJ) value;
+		} else if (value instanceof RubyNil ) {
+			this.encoding = null;
 		} else {
-			EncodingJ encoding;
-			if ((value instanceof EncodingJ))
-				encoding = (EncodingJ) value;
-			else
-				throw context.getRuntime().newArgumentError("unsupported");
+			throw context.getRuntime().newArgumentError("unsupported " + value.getMetaClass().getName() );
 		}
 	}
 
@@ -193,7 +220,16 @@ public class DocumentJ extends BaseJ<Document> {
 
 	@JRubyMethod(name = { "version" })
 	public IRubyObject getVersion(ThreadContext context) throws Exception {
-		return context.getRuntime().newString(this.version);
+		if( this.version == null )
+			return context.getRuntime().getNil();
+		return this.version;
+	}
+
+				
+	@JRubyMethod(name ="xhtml?")
+	public IRubyObject isXhtml(ThreadContext context) throws Exception {
+		// TODO
+		return UtilJ.toBool(context, false);
 	}
 
 	@JRubyMethod(name = { "find_first" }, optional = 1)

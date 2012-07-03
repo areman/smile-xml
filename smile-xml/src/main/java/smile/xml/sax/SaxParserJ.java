@@ -9,13 +9,11 @@ import java.util.Map;
 
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
-import org.jruby.RubyException;
 import org.jruby.RubyHash;
 import org.jruby.RubyModule;
 import org.jruby.RubyObject;
 import org.jruby.RubyString;
 import org.jruby.anno.JRubyMethod;
-import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -31,216 +29,132 @@ import org.xml.sax.helpers.XMLReaderFactory;
 import smile.xml.ErrorJ;
 import smile.xml.util.UtilJ;
 
-public class SaxParserJ extends RubyObject
-{
-  private static final long serialVersionUID = -8712513236401964568L;
-  public static final ObjectAllocator ALLOCATOR = new ObjectAllocator()
-  {
-    public IRubyObject allocate(Ruby runtime, RubyClass klass)
-    {
-      return new SaxParserJ(runtime, klass); }  } ;
-  private RubyString string;
-  private RubyString fileName;
-  private IRubyObject callbacks;
+public class SaxParserJ extends RubyObject {
+	
+	private static final long serialVersionUID = -8712513236401964568L;
+	
+	public static final ObjectAllocator ALLOCATOR = new ObjectAllocator() {
+		public IRubyObject allocate(Ruby runtime, RubyClass klass) {
+			return new SaxParserJ(runtime, klass);
+		}
+	};
+	
+	public static RubyClass define(Ruby runtime) {
+		RubyModule module = UtilJ.getModule(runtime, "LibXML", "XML" );
+		RubyClass result = module.defineClassUnder( "SaxParser", runtime.getObject(), ALLOCATOR );
+		result.defineAnnotatedMethods(SaxParserJ.class);
+		return result;
+	}
 
-  public static RubyClass define(Ruby runtime) { RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML", "XML" });
-    RubyClass result = module.defineClassUnder("SaxParser", runtime.getObject(), ALLOCATOR);
-    result.defineAnnotatedMethods(SaxParserJ.class);
-    return result; }
+	public static RubyClass getRubyClass(Ruby runtime) {
+		return UtilJ.getClass(runtime, "LibXML", "XML", "SaxParser" );
+	}
 
-  public static RubyClass getRubyClass(Ruby runtime)
-  {
-    return UtilJ.getClass(runtime, new String[] { "LibXML", "XML", "SaxParser" });
-  }
+	@JRubyMethod(name = { "string" }, module = true)
+	public static IRubyObject fromString(ThreadContext context, IRubyObject self, IRubyObject pString) {
+		
+		if (pString.isNil())
+			throw context.getRuntime().newTypeError( "wrong argument type nil (expected String)" );
 
-  @JRubyMethod(name={"string"}, module=true)
-  public static IRubyObject fromString(ThreadContext context, IRubyObject self, IRubyObject pString) {
-	  if( pString.isNil() )
-		  throw context.getRuntime().newTypeError("wrong argument type nil (expected String)");
+		SaxParserJ parser = new SaxParserJ(context);
+		parser.string = ((RubyString) pString);
+		return parser;
+	}
 
-    SaxParserJ parser = new SaxParserJ(context);
-    parser.string = ((RubyString)pString);
-    return parser;
-  }
+	@JRubyMethod(name = "file", module = true)
+	public static IRubyObject fromFile(ThreadContext context, IRubyObject self,
+			IRubyObject pFile) {
 
-  @JRubyMethod(name="file", module=true)
-  public static IRubyObject fromFile(ThreadContext context, IRubyObject self, IRubyObject pFile) {
-	  
-	  if( pFile.isNil() )
-		  throw context.getRuntime().newTypeError("can't convert nil into String");
-	  
-	  if( new File( pFile.asJavaString() ).exists() == false ) {
-		  throw ErrorJ.newInstance( context, "Warning: failed to load external entity \""+ pFile.asJavaString() + "\"." );
-	  }
-		  
-    SaxParserJ parser = new SaxParserJ(context);
-    parser.fileName = ((RubyString)pFile);
-    return parser;
-  }
+		if (pFile.isNil())
+			throw context.getRuntime().newTypeError( "can't convert nil into String" );
 
-  @JRubyMethod(name={"io"}, module=true)
-  public static IRubyObject fromIo(ThreadContext context, IRubyObject self, IRubyObject pIo) {
-    SaxParserJ parser = new SaxParserJ(context);
-    parser.string = ((RubyString)pIo.callMethod(context, "read"));
-    return parser;
-  }
+		if (new File(pFile.asJavaString()).exists() == false)
+			throw ErrorJ.newRaiseException( context, "Warning: failed to load external entity \"" + pFile.asJavaString() + "\".");
 
-  public SaxParserJ(Ruby runtime, RubyClass metaClass)
-  {
-    super(runtime, metaClass);
-  }
+		SaxParserJ parser = new SaxParserJ(context);
+		parser.fileName = ((RubyString) pFile);
+		return parser;
+	}
 
-  public SaxParserJ(ThreadContext context) {
-    this(context.getRuntime(), getRubyClass(context.getRuntime()));
-  }
+	private RubyString string;
+	private RubyString fileName;
+	private IRubyObject callbacks;
 
-  @JRubyMethod(name={"initialize"}, optional=1)
-  public IRubyObject initialize(ThreadContext context, IRubyObject[] args) {
-    return this;
-  }
-  @JRubyMethod(name={"filename="})
-  public void setFilename(ThreadContext context, IRubyObject pFileName) {
-    this.fileName = ((RubyString)pFileName);
-  }
-  @JRubyMethod(name={"string="})
-  public void setString(ThreadContext context, IRubyObject pFileName) {
-    this.string = ((RubyString)pFileName);
-  }
-  @JRubyMethod(name={"string"})
-  public IRubyObject getString(ThreadContext context) {
-    return this.string;
-  }
-  @JRubyMethod(name={"callbacks="})
-  public void setCallbacks(ThreadContext context, IRubyObject pCallbacks) {
-    this.callbacks = pCallbacks;
-  }
-  @JRubyMethod(name={"callbacks"})
-  public IRubyObject getCallbacks(ThreadContext context) {
-    return this.callbacks;
-  }
+	@JRubyMethod(name = { "io" }, module = true)
+	public static IRubyObject fromIo(ThreadContext context, IRubyObject self, IRubyObject pIo) {
+		SaxParserJ parser = new SaxParserJ(context);
+		parser.string = ((RubyString) pIo.callMethod(context, "read"));
+		return parser;
+	}
 
-  @JRubyMethod(name={"parse"})
-  public IRubyObject parse(ThreadContext context) throws SAXException, IOException {
-    XMLReader xmlReader = XMLReaderFactory.createXMLReader();
-    InputSource inputSource;
-    if (this.string != null) {
-      inputSource = new InputSource(new StringReader(this.string.asJavaString()));
-    } else {
-      FileReader reader = new FileReader(this.fileName.asJavaString());
-      inputSource = new InputSource(reader);
-    }
+	public SaxParserJ(Ruby runtime, RubyClass metaClass) {
+		super(runtime, metaClass);
+	}
 
-    xmlReader.setEntityResolver(new EntityResolver()
-    {
-      public InputSource resolveEntity(String publicId, String systemId)
-        throws SAXException, IOException
-      {
-        return new InputSource(new StringReader(""));
-      }
-    });
-    if( callbacks != null && callbacks.isNil() == false )
-    	xmlReader.setContentHandler(new Handler(context));
-    xmlReader.setProperty("http://xml.org/sax/properties/lexical-handler", xmlReader.getContentHandler());
-try {
-    xmlReader.parse(inputSource);
-} catch( SAXException e ) {
-	throw ErrorJ.newInstance(context, e.getMessage() );
-}
+	public SaxParserJ(ThreadContext context) {
+		this(context.getRuntime(), getRubyClass(context.getRuntime()));
+	}
 
-    return context.getRuntime().getTrue();
-  }
+	@JRubyMethod(name = { "initialize" }, optional = 1)
+	public IRubyObject initialize(ThreadContext context, IRubyObject[] args) {
+		return this;
+	}
 
-  private class Handler extends DefaultHandler2
-  {
-    private final ThreadContext context;
-    private boolean cdata = false;
+	@JRubyMethod(name = { "filename=" })
+	public void setFilename(ThreadContext context, IRubyObject pFileName) {
+		this.fileName = ((RubyString) pFileName);
+	}
 
-    public Handler(ThreadContext context) {
-      this.context = context;
-    }
+	@JRubyMethod(name = { "string=" })
+	public void setString(ThreadContext context, IRubyObject pFileName) {
+		this.string = ((RubyString) pFileName);
+	}
 
-    public void setDocumentLocator(Locator locator)
-    {
-    }
+	@JRubyMethod(name = { "string" })
+	public IRubyObject getString(ThreadContext context) {
+		return this.string;
+	}
 
-    public void startDocument() throws SAXException
-    {
-      IRubyObject[] args = new IRubyObject[0];
-      SaxParserJ.this.callbacks.callMethod(this.context, "on_start_document", args);
-    }
+	@JRubyMethod(name = { "callbacks=" })
+	public void setCallbacks(ThreadContext context, IRubyObject pCallbacks) {
+		this.callbacks = pCallbacks;
+	}
 
-    public void endDocument() throws SAXException
-    {
-      IRubyObject[] args = new IRubyObject[0];
-      SaxParserJ.this.callbacks.callMethod(this.context, "on_end_document", args);
-    }
+	@JRubyMethod(name = { "callbacks" })
+	public IRubyObject getCallbacks(ThreadContext context) {
+		return this.callbacks;
+	}
 
-    public void startElement(String uri, String localName, String qName, Attributes atts)
-      throws SAXException
-    {
-      Map map = new HashMap();
-      for (int i = 0; i < atts.getLength(); i++)
-        map.put(this.context.getRuntime().newString(atts.getLocalName(i)), this.context.getRuntime().newString(atts.getValue(i)));
-      IRubyObject[] args = { this.context.getRuntime().newString(localName), RubyHash.newHash(this.context.getRuntime(), map, this.context.getRuntime().getNil()) };
-      SaxParserJ.this.callbacks.callMethod(this.context, "on_start_element", args);
-    }
+	@JRubyMethod(name = { "parse" })
+	public IRubyObject parse(ThreadContext context) throws SAXException,
+			IOException {
+		XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+		InputSource inputSource;
+		if (this.string != null) {
+			inputSource = new InputSource(new StringReader(
+					this.string.asJavaString()));
+		} else {
+			FileReader reader = new FileReader(this.fileName.asJavaString());
+			inputSource = new InputSource(reader);
+		}
 
-    public void endElement(String uri, String localName, String qName) throws SAXException
-    {
-      IRubyObject[] args = { this.context.getRuntime().newString(localName) };
-      SaxParserJ.this.callbacks.callMethod(this.context, "on_end_element", args);
-    }
+		xmlReader.setEntityResolver(new EntityResolver() {
+			public InputSource resolveEntity(String publicId, String systemId)
+					throws SAXException, IOException {
+				return new InputSource(new StringReader(""));
+			}
+		});
+		if (callbacks != null && callbacks.isNil() == false)
+			xmlReader.setContentHandler(new CallbackHandler(context, callbacks));
+		
+		xmlReader.setProperty("http://xml.org/sax/properties/lexical-handler",xmlReader.getContentHandler());
+		try {
+			xmlReader.parse(inputSource);
+		} catch (SAXException e) {
+			throw ErrorJ.newRaiseException(context, e.getMessage());
+		}
 
-    public void characters(char[] ch, int start, int length) throws SAXException
-    {
-      IRubyObject[] args = { this.context.getRuntime().newString(String.valueOf(ch, start, length)) };
-      if (this.cdata)
-        SaxParserJ.this.callbacks.callMethod(this.context, "on_cdata_block", args);
-      else
-        SaxParserJ.this.callbacks.callMethod(this.context, "on_characters", args);
-    }
+		return context.getRuntime().getTrue();
+	}
 
-    public void processingInstruction(String target, String data)
-      throws SAXException
-    {
-      IRubyObject[] args = { this.context.getRuntime().newString(target), this.context.getRuntime().newString(data) };
-      SaxParserJ.this.callbacks.callMethod(this.context, "on_processing_instruction", args);
-    }
-
-    public void startCDATA()
-    {
-      this.cdata = true;
-    }
-
-    public void endCDATA()
-    {
-      this.cdata = false;
-    }
-
-    public void comment(char[] ch, int start, int length) throws SAXException
-    {
-      IRubyObject[] args = { this.context.getRuntime().newString(String.valueOf(ch, start, length)) };
-      SaxParserJ.this.callbacks.callMethod(this.context, "on_comment", args);
-    }
-
-    public void skippedEntity(String name)
-      throws SAXException
-    {
-    }
-
-    public void ignorableWhitespace(char[] ch, int start, int length)
-      throws SAXException
-    {
-    }
-
-    public void startPrefixMapping(String prefix, String uri)
-      throws SAXException
-    {
-    }
-
-    public void endPrefixMapping(String prefix)
-      throws SAXException
-    {
-    }
-  }
 }

@@ -38,6 +38,8 @@ public class SmileXML {
 		XPathObjectJ.define(runtime);
 		XPathContextJ.define(runtime);
 		
+		EncodingJ.define(runtime);
+		
 		ErrorJ.define(runtime);
 
 		RubyClass ns = NamespaceJ.define(runtime);

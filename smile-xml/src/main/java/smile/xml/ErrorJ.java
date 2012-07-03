@@ -39,10 +39,15 @@ public class ErrorJ extends RubyException
     return UtilJ.getClass(runtime, new String[] { "LibXML", "XML", "Error" });
   }
 
-  public static RaiseException newInstance(ThreadContext context, String message )
+  public static RaiseException newRaiseException(ThreadContext context, String message )
   {
 	  Ruby run = context.getRuntime();
 	  return new RaiseException( run, getRubyClass( context.getRuntime() ), message, true );
+  }
+
+  public static RubyException newInstance(ThreadContext context, String message )
+  {
+	  return RubyException.newException( context.getRuntime(), getRubyClass( context.getRuntime() ), message );
   }
 
   private ErrorJ(Ruby runtime, RubyClass metaClass) {

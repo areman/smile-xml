@@ -12,49 +12,66 @@ public class SaxParserCallbacksJ
 {
   public static RubyModule define(Ruby runtime)
   {
-    RubyClass parent = UtilJ.getClass(runtime, new String[] { "LibXML", "XML", "SaxParser" });
+    RubyClass parent = UtilJ.getClass(runtime, "LibXML", "XML", "SaxParser" );
     RubyModule result = parent.defineModuleUnder("Callbacks");
     result.defineAnnotatedMethods(SaxParserCallbacksJ.class);
     return result;
   }
 
-  @JRubyMethod(name={"on_start_document"})
+  @JRubyMethod(name="on_start_document")
   public static void onStartDocument(ThreadContext context, IRubyObject self)
   {
   }
 
-  @JRubyMethod(name={"on_start_element"})
+  @JRubyMethod(name="on_start_element")
   public static void onStartElement(ThreadContext context, IRubyObject self, IRubyObject name, IRubyObject attr)
   {
   }
 
-  @JRubyMethod(name={"on_characters"})
+  @JRubyMethod(name="on_characters")
   public static void onCharacter(ThreadContext context, IRubyObject self, IRubyObject arg)
   {
   }
 
-  @JRubyMethod(name={"on_comment"})
+  @JRubyMethod(name="on_comment")
   public static void onComment(ThreadContext context, IRubyObject self, IRubyObject arg)
   {
   }
 
-  @JRubyMethod(name={"on_processing_instruction"})
+  @JRubyMethod(name="on_processing_instruction")
   public static void onProcessingInstruction(ThreadContext context, IRubyObject self, IRubyObject target, IRubyObject data)
   {
   }
 
-  @JRubyMethod(name={"on_cdata_block"})
+  @JRubyMethod(name="on_cdata_block")
   public static void onCDataBlock(ThreadContext context, IRubyObject self, IRubyObject cdata)
   {
   }
 
-  @JRubyMethod(name={"on_end_element"})
+  @JRubyMethod(name="on_end_element")
   public static void onEndElement(ThreadContext context, IRubyObject self, IRubyObject name)
   {
   }
 
-  @JRubyMethod(name={"on_end_document"})
+  @JRubyMethod(name="on_end_document")
   public static void onEndDocument(ThreadContext context, IRubyObject self)
   {
   }
+
+  @JRubyMethod(name="on_start_element_ns")
+  public static void onStartElementNS(ThreadContext context, IRubyObject self, IRubyObject name, IRubyObject prefix, IRubyObject uri )
+  {
+  }
+
+  @JRubyMethod(name="on_end_element_ns")
+  public static void onEndElementNS(ThreadContext context, IRubyObject self, IRubyObject name, IRubyObject prefix, IRubyObject uri )
+  {
+  }
+  
+  @JRubyMethod(name="on_error")
+  public static void onError(ThreadContext context, IRubyObject self, IRubyObject error )
+  {
+  }
+
+  
 }

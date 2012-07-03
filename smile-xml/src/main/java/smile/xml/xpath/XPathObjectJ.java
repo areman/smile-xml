@@ -179,6 +179,7 @@ public class XPathObjectJ extends RubyObject {
 		List array = new ArrayList();
 		for (int i = 0; i < list.getLength(); i++) {
 			NodeJ node = NodeJ.newInstance(context);
+			//node.setDocPresent( this.node instanceof Document ? true : ((Node)).isDocPresent() );
 			node.setJavaObject(list.item(i));
 			array.add(node);
 		}

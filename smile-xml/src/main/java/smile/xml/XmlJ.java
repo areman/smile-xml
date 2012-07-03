@@ -22,4 +22,17 @@ public class XmlJ {
   public static void setDefaultKeepBlanks( ThreadContext context, IRubyObject self, IRubyObject pValue ) {
 	  
   }
+
+  @JRubyMethod( name="enabled_zlib?", module=true )
+  public static IRubyObject isEnabledZlib( ThreadContext context, IRubyObject self ) {
+	// TODO
+	  return context.getRuntime().getFalse();
+  }
+
+  @JRubyMethod( name="enabled_zlib=", module=true )
+  public static void setEnabledZlib( ThreadContext context, IRubyObject self, IRubyObject pValue ) {
+	  // TODO
+  }
+
+  
 }

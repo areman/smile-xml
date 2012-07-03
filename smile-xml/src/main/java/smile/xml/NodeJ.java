@@ -1,9 +1,8 @@
 package smile.xml;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.parsers.DocumentBuilder;
+
 import org.jruby.Ruby;
 import org.jruby.RubyArray;
 import org.jruby.RubyBoolean;
@@ -25,6 +24,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import smile.xml.util.UtilJ;
 import smile.xml.xpath.XPathContextJ;
 import smile.xml.xpath.XPathObjectJ;
@@ -108,13 +108,19 @@ public class NodeJ extends BaseJ<Node>
     return (NodeJ)getRubyClass(context.getRuntime()).newInstance(context, new IRubyObject[] { name, content, namespace }, null);
   }
 
-private boolean outputEscaping = true;
+  private boolean docPresent = false;
+  
+  private boolean outputEscaping = true;
 
   protected NodeJ(Ruby ruby, RubyClass clazz)
   {
     super(ruby, clazz);
   }
 
+  public boolean isDocPresent() {
+	  return docPresent;
+  }
+  
   @JRubyMethod(name={"initialize"}, optional=3)
   public void initialize(ThreadContext context, IRubyObject[] args) {
     RubyString name = (RubyString)(RubyString)(args.length > 0 ? args[0] : null);
@@ -161,7 +167,13 @@ private boolean outputEscaping = true;
   public NodeJ add(ThreadContext context, IRubyObject arg)
   {
     if ((arg instanceof NodeJ)) {
+    	
       Node node = (Node)((NodeJ)arg).getJavaObject();
+      
+		if( isDocPresent() && 
+				getJavaObject().getOwnerDocument().equals( node.getOwnerDocument() ) == false )
+			throw ErrorJ.newRaiseException(context, " Nodes belong to different documents.  You must first import the node by calling XML::Document.import.");
+
       node = ((Node)getJavaObject()).getOwnerDocument().adoptNode(node);
       ((Node)getJavaObject()).appendChild(node);
     } else if ((arg instanceof RubyString)) {
@@ -351,7 +363,8 @@ private boolean outputEscaping = true;
     	NodeJ node;
     	switch( list.item(i).getNodeType() ) {
     	case Node.ELEMENT_NODE:
-    	    node = newInstance(context);    
+    	    node = newInstance(context); 
+    	    node.setDocPresent( isDocPresent() );
     	    node.setJavaObject( list.item(i) );
     	    return node;
     	}
@@ -368,6 +381,7 @@ private boolean outputEscaping = true;
   @JRubyMethod(name={"last"})
   public NodeJ getLast(ThreadContext context) {
     NodeJ node = newInstance(context);
+    node.setDocPresent( isDocPresent() );
     node.setJavaObject(((Node)getJavaObject()).getLastChild());
     return node;
   }
@@ -381,6 +395,7 @@ private boolean outputEscaping = true;
     List array = new ArrayList(list.getLength());
     for (int i = 0; i < list.getLength(); i++) {
       NodeJ node = newInstance(context);
+      node.setDocPresent( isDocPresent() );
       node.setJavaObject(list.item(i));
       array.add(node);
     }
@@ -390,6 +405,7 @@ private boolean outputEscaping = true;
   public NodeJ clone(ThreadContext context, IRubyObject pDeep) {
     RubyBoolean deep = (RubyBoolean)pDeep;
     NodeJ node = newInstance(context);
+    node.setDocPresent( isDocPresent() );
     node.setJavaObject(((Node)getJavaObject()).cloneNode(deep.isNil() ? false : deep.isTrue()));
 
     return node;
@@ -606,7 +622,8 @@ private boolean outputEscaping = true;
     	return context.getRuntime().getNil();
     }
     
-    NodeJ node = newInstance(context);    
+    NodeJ node = newInstance(context);
+    node.setDocPresent( isDocPresent() );
     node.setJavaObject( n );
     return node;
   }
@@ -696,6 +713,7 @@ private boolean outputEscaping = true;
       return context.getRuntime().getNil();
     }
     NodeJ node = newInstance(context);
+    node.setDocPresent( isDocPresent() );
     node.setJavaObject(((Node)getJavaObject()).getParentNode());
     return node;
   }
@@ -753,6 +771,7 @@ private boolean outputEscaping = true;
       return context.getRuntime().getNil();
     }
     NodeJ node = newInstance(context);
+    node.setDocPresent( isDocPresent() );
     node.setJavaObject(((Node)getJavaObject()).getPreviousSibling());
     return node;
   }
@@ -811,6 +830,7 @@ private boolean outputEscaping = true;
     List array = new ArrayList(list.getLength());
     for (int i = 0; i < list.getLength(); i++) {
       NodeJ node = newInstance(context);
+      node.setDocPresent( isDocPresent() );
       node.setJavaObject(list.item(i));
       array.add(node);
     }
@@ -823,6 +843,7 @@ private boolean outputEscaping = true;
     List array = new ArrayList(list.getLength());
     for (int i = 0; i < list.getLength(); i++) {
       NodeJ node = newInstance(context);
+      node.setDocPresent( isDocPresent() );
       node.setJavaObject(list.item(i));
       array.add(node);
     }
@@ -838,9 +859,14 @@ private boolean outputEscaping = true;
       if (obj.getNodeType() != 1)
         continue;
       NodeJ node = newInstance(context);
+      node.setDocPresent( isDocPresent() );
       node.setJavaObject(obj);
       array.add(node);
     }
     return array;
   }
+
+public void setDocPresent(boolean b) {
+	this.docPresent = b;
+}
 }
