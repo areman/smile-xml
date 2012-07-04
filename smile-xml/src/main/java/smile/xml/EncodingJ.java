@@ -2,18 +2,22 @@ package smile.xml;
 
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
-import org.jruby.RubyModule;
 import org.jruby.RubyObject;
 import org.jruby.RubyString;
+import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyConstant;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
+
 import smile.xml.util.UtilJ;
 
+@JRubyClass( name="LibXML::XML::Encoding" )
 public class EncodingJ extends RubyObject {
+	
 	private static final long serialVersionUID = -3033814105839661460L;
+	
 	private static final ObjectAllocator ALLOCATOR = new ObjectAllocator() {
 		public IRubyObject allocate(Ruby runtime, RubyClass klass) {
 			return new EncodingJ(runtime, klass);
@@ -21,12 +25,7 @@ public class EncodingJ extends RubyObject {
 	};
 
 	public static RubyClass define(Ruby runtime) {
-		RubyModule module = UtilJ.getModule(runtime, "LibXML", "XML");
-		RubyClass result = module.defineClassUnder("Encoding",
-				runtime.getObject(), ALLOCATOR);
-		result.defineAnnotatedMethods(EncodingJ.class);
-		result.defineAnnotatedConstants(EncodingJ.class);
-		return result;
+		return UtilJ.defineClass( runtime, EncodingJ.class, ALLOCATOR );
 	}
 
 	@JRubyConstant
@@ -38,11 +37,34 @@ public class EncodingJ extends RubyObject {
 	@JRubyConstant
 	public static final String ISO_8859_1 = "ISO-8859-1";
 
-	public static EncodingJ newInstance(ThreadContext context, String string) {
+	public static EncodingJ get(ThreadContext context, Object object ) {
+		if( object == null )
+			return null;
+		if( object instanceof EncodingJ )
+			return (EncodingJ) object;
+		if( object instanceof String )
+			return newInstance(context, (String) object );
+		if( object instanceof RubyString )
+			return newInstance(context, (RubyString) object );
+		throw context.getRuntime().newArgumentError("");
+	}
 
-		IRubyObject[] args = { context.getRuntime().newString(string) };
+	public static EncodingJ newInstance(ThreadContext context, RubyString string) {
+		IRubyObject[] args = { string };
 		EncodingJ encoding = (EncodingJ) getRubyClass( context.getRuntime() ).newInstance(context, args, null );
 		return encoding;
+	}
+	
+	public static EncodingJ newInstance(ThreadContext context, String string) {
+		return newInstance( context, context.getRuntime().newString(string) );
+	}
+
+	public static RubyClass getRubyClass(Ruby runtime) {
+		return UtilJ.getClass(runtime, "LibXML", "XML", "Encoding");
+	}
+
+	private EncodingJ(Ruby runtime, RubyClass metaClass) {
+		super(runtime, metaClass);
 	}
 
 	private RubyString encoding;
@@ -53,13 +75,11 @@ public class EncodingJ extends RubyObject {
 			this.encoding = (RubyString) args[0];
 		}
 	}
-
-	public static RubyClass getRubyClass(Ruby runtime) {
-		return UtilJ.getClass(runtime, "LibXML", "XML", "Encoding");
+	
+	@Override
+	public String asJavaString() {
+		return encoding == null ? "" : encoding.asJavaString();
 	}
 
-	private EncodingJ(Ruby runtime, RubyClass metaClass) {
-		super(runtime, metaClass);
-	}
 
 }

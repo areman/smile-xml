@@ -869,4 +869,9 @@ public class NodeJ extends BaseJ<Node>
 public void setDocPresent(boolean b) {
 	this.docPresent = b;
 }
+	@Override
+	public String toString() {
+		return UtilJ.toString( getJavaObject(), true );
+	}
+
 }

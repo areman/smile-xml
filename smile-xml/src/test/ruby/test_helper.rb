@@ -12,3 +12,12 @@
 
 #require 'xml'
 
+
+def remove_header_declaration( xml )
+  if xml.strip.start_with?( '<?xml')
+    i = xml.index( '?>', 3 )
+    xml[ i+2, xml.length-i ]
+  else
+    xml 
+  end
+end

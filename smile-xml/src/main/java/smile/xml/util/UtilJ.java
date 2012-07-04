@@ -25,12 +25,17 @@ import org.jruby.RubyBoolean;
 import org.jruby.RubyClass;
 import org.jruby.RubyModule;
 import org.jruby.RubyNil;
+import org.jruby.RubyObject;
 import org.jruby.RubyString;
 import org.jruby.RubySymbol;
+import org.jruby.anno.JRubyClass;
 import org.jruby.runtime.Block;
+import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.w3c.dom.Node;
+
+import smile.xml.EncodingJ;
 
 public class UtilJ {
 	private static final SchemaFactory schemaFactoryInstance = SchemaFactory
@@ -71,13 +76,52 @@ public class UtilJ {
 		return schemaFactoryInstance;
 	}
 
-	public static RubyModule getModule(Ruby runtime, String...path) {
-		RubyModule m = runtime.fastGetModule(path[0]);
+	private static List<String> split( String name ) {
+		List<String> list = new ArrayList<String>();
+		int i=0;
+		for( int j=name.indexOf("::"); j!=-1; j=name.indexOf("::", i )  ) {
+			list.add( name.substring(i,j) );
+			i = j+2;
+		}
+		list.add( name.substring(i) );
+		return list;
+	}
+	
+	public static RubyClass defineClass( Ruby runtime, Class<? extends RubyObject> klass, ObjectAllocator allocator ) {
 
-		for (int i = 1; i < path.length; i++) {
-			IRubyObject tmp = m.fastGetConstant(path[i]);
+		JRubyClass anno     = klass.getAnnotation( JRubyClass.class );		
+		List<String> path   = split( anno.name()[0] );
+		String name         = path.remove( path.size()-1 );
+		List<String> parent = split( anno.parent() );
+		
+		RubyModule module = getModule( runtime, path );
+		RubyClass result = module.defineClassUnder( name, getClass(runtime, parent), allocator );
+		
+		for( String i : anno.include() ) {
+			result.includeModule( getModule(runtime, split(i) ) );
+		}
+		
+		result.defineAnnotatedMethods( klass );
+		result.defineAnnotatedConstants( klass );
+		
+		return result;
+	}
+	
+	public static RubyModule getModule(Ruby runtime, String...path) {
+		return getModule(runtime, Arrays.asList( path ) );
+	}
+	
+	public static RubyModule getModule(Ruby runtime, List<String> path) {
+		
+		if( path.isEmpty() )
+			return runtime.getObject();
+		
+		RubyModule m = runtime.fastGetModule( path.get(0) ) ;
+
+		for (int i = 1; i < path.size(); i++) {
+			IRubyObject tmp = m.fastGetConstant( path.get(i) );
 			if (tmp == null) {
-				tmp = m.defineModuleUnder(path[i]);
+				tmp = m.defineModuleUnder( path.get(i) );
 			}
 			m = (RubyModule) tmp;
 		}
@@ -86,24 +130,27 @@ public class UtilJ {
 	}
 
 	public static RubyClass getClass(Ruby runtime, String...path) {
-		if (path.length == 1) {
-			return runtime.fastGetClass(path[0]);
+		return getClass(runtime, Arrays.asList(path) );
+	}
+	
+	public static RubyClass getClass(Ruby runtime, List<String> path ) {
+		if (path.size() == 1) {
+			return runtime.fastGetClass( path.get(0) );
 		}
-		RubyModule m = runtime.fastGetModule(path[0]);
+		RubyModule m = runtime.fastGetModule( path.get(0) );
 
-		for (int i = 1; i < path.length - 1; i++) {
-			IRubyObject tmp = m.fastGetConstant(path[i]);
+		for (int i = 1; i < path.size() - 1; i++) {
+			IRubyObject tmp = m.fastGetConstant( path.get(i) );
 			if (tmp == null) {
-				tmp = m.defineModuleUnder(path[i]);
+				tmp = m.defineModuleUnder( path.get(i) );
 			}
 			m = (RubyModule) tmp;
 		}
 
-		return m.fastGetClass(path[(path.length - 1)]);
+		return m.fastGetClass( path.get( path.size() - 1) );
 	}
 
-	public static void iterateOver(ThreadContext context, Block block,
-			Iterable<?> it) {
+	public static void iterateOver(ThreadContext context, Block block, Iterable<?> it) {
 		for (Iterator i$ = it.iterator(); i$.hasNext();) {
 			Object o = i$.next();
 			block.yield(context, (IRubyObject) o);
@@ -112,18 +159,36 @@ public class UtilJ {
 		}
 	}
 
-	public static String toString(Node node, boolean escape ) throws Exception {
+	public static String toString(Node node, boolean escape ) {
+		return toString( node, escape, (String) null );
+	}
+	
+	public static String toString(Node node, boolean escape, EncodingJ encoding ) {
+		return toString( node, escape, encoding == null ? null : encoding.asJavaString() );
+	}
+	
+	public static String toString(Node node, boolean escape, String encoding ) {
 		StringWriter writer = new StringWriter();
 		try {
-			StreamResult result = new StreamResult(writer);
-			DOMSource source = new DOMSource(node);
-			Transformer transformer = getTransformer();
-			transformer.transform(source, result);
-			String str = writer.toString().replace(
-					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "");
-			return str;
-		} finally {
-			writer.close();
+			try {
+				StreamResult result = new StreamResult(writer);
+				DOMSource source = new DOMSource(node);
+				Transformer transformer = getTransformer();
+				transformer.transform(source, result);
+				
+				if( encoding != null )
+					transformer.setOutputProperty( OutputKeys.ENCODING, encoding );
+				
+				String str = writer.toString().replace(
+						"<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "");
+				return str;
+			} finally {
+				writer.close();
+			}
+		} catch( RuntimeException e) {
+			throw e;
+		} catch( Exception e ) {
+			throw new RuntimeException(e);
 		}
 	}
 

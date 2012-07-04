@@ -16,6 +16,7 @@ import org.jruby.RubyHash;
 import org.jruby.RubyModule;
 import org.jruby.RubyNil;
 import org.jruby.RubyString;
+import org.jruby.RubySymbol;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.javasupport.JavaObject;
 import org.jruby.runtime.Block;
@@ -146,10 +147,31 @@ public class DocumentJ extends BaseJ<Document> {
 		return context.getRuntime().newString("document_xml");
 	}
 
-	@JRubyMethod(name = { "canonicalize" })
-	public RubyString canonicalize(ThreadContext context) throws Exception {
+	@JRubyMethod(name ="canonicalize", rest=true )
+	public RubyString canonicalize(ThreadContext context, IRubyObject[] args ) throws Exception {
 		
-		return toString(context, new IRubyObject[]{} );
+		boolean keepComment = false;
+		
+		if( args.length > 0 && args[0] instanceof RubyBoolean ) {
+			keepComment = ((RubyBoolean)args[0]).isTrue();
+			
+		}
+		
+		String string = toString();
+		string = string.replace("\r", "" );
+
+		if( keepComment == false )
+			for( int i = string.indexOf("<!--"); i != -1; i = string.indexOf("<!--") ) {
+				int j = string.indexOf("-->");
+				string = string.substring( 0, i ) + string.substring(j+3);
+			}
+
+		if( string.trim().startsWith("<?xml") ) {
+			int i = string.indexOf( "?>" );
+			string = string.substring( i+2 );
+		}
+		
+		return context.getRuntime().newString(string);
 	}
 
 	@JRubyMethod(name = { "child" })
@@ -160,20 +182,20 @@ public class DocumentJ extends BaseJ<Document> {
 		return node;
 	}
 
-	@JRubyMethod(name = { "child?" })
+	@JRubyMethod( name = "child?" )
 	public RubyBoolean hasChild(ThreadContext context) {
-		return UtilJ.toBool(context,
-				((Document) getJavaObject()).getFirstChild() != null);
+		return UtilJ.toBool( context, getJavaObject().getFirstChild() != null );
 	}
 
-	@JRubyMethod(name = { "compression" })
+	@JRubyMethod(name = "compression" )
 	public RubyFixnum getCompression(ThreadContext context) {
-		throw context.getRuntime().newArgumentError("unsupported");
+		// TODO
+		return context.getRuntime().newFixnum(0);
 	}
 
 	@JRubyMethod(name = { "compression=" })
 	public void setCompression(ThreadContext context, IRubyObject value) {
-		throw context.getRuntime().newArgumentError("unsupported");
+		// TODO
 	}
 
 	@JRubyMethod(name = { "compression?" })
@@ -190,16 +212,15 @@ public class DocumentJ extends BaseJ<Document> {
 		return XPathContextJ.newInstance(context, this);
 	}
 
-	@JRubyMethod(name = { "encoding" })
+	@JRubyMethod( name="encoding" )
 	public IRubyObject getEncoding(ThreadContext context) {
 		return this.encoding;
 	}
 
-	@JRubyMethod(name = { "encoding=" })
+	@JRubyMethod( name="encoding=" )
 	public void setEncoding(ThreadContext context, IRubyObject value) {
 		if( value instanceof RubyString ) {
-			RubyString encoding = (RubyString) value;
-			this.encoding = EncodingJ.newInstance(context, encoding.asJavaString() );
+			this.encoding = EncodingJ.newInstance(context, (RubyString) value );
 		} else if (value instanceof EncodingJ) {
 			this.encoding = (EncodingJ) value;
 		} else if (value instanceof RubyNil ) {
@@ -242,30 +263,58 @@ public class DocumentJ extends BaseJ<Document> {
 				new IRubyObject[0]).getFirst(context);
 	}
 
-	@JRubyMethod(name = { "to_s" }, optional = 1)
-	public RubyString toString(ThreadContext context, IRubyObject[] args)
-			throws Exception {
-		RubyBoolean bool;
-		if (args.length != 0) {
-			RubyHash hash;
-			if ((args[0] instanceof RubyHash)) {
-				hash = (RubyHash) args[0];
-			} else if ((args[0] instanceof RubyBoolean)) {
-				bool = (RubyBoolean) args[0];
+	@Override
+	public String toString() {
+		return UtilJ.toString( getJavaObject(), true, encoding );
+	}
+
+	@JRubyMethod(name="to_s", rest=true)
+	public RubyString toString(ThreadContext context, IRubyObject[] args ) throws Exception {
+		RubyBoolean indent;
+		EncodingJ   encoding = null;
+		if( args.length > 0 ) {
+			if( args[0] instanceof RubyHash ) {
+				RubyHash hash = (RubyHash) args[0];
+				RubySymbol key = context.getRuntime().newSymbol( "indent" );
+				indent = toRubyBool( context, hash.get( key ) );
+				key = context.getRuntime().newSymbol( "encoding" );
+				encoding = EncodingJ.get(context, hash.get( key ) );
+			} else if( args[0] instanceof RubyBoolean ) {
+				indent = (RubyBoolean) args[0];
+			} else if( args[0] instanceof RubyNil ) {
+				
+			} else {
+				throw context.getRuntime().newArgumentError("");
 			}
 		}
 
-		String string = UtilJ.toString( getJavaObject(), true );
+		String string = UtilJ.toString( getJavaObject(), true, encoding );
 		return context.getRuntime().newString(string);
 	}
 
+	private RubyBoolean toRubyBool( ThreadContext context, Object obj ) {
+		if( obj instanceof RubyBoolean ) {
+			return (RubyBoolean) obj;
+		}
+		if( obj instanceof Boolean ) {
+			return context.getRuntime().newBoolean( (Boolean) obj );
+		}
+		if( obj == null ) {
+			return null;
+		}
+		if( obj == null || obj instanceof RubyNil ) {
+			return null;
+		}
+		throw context.getRuntime().newArgumentError("");			
+	}
+	
 	@JRubyMethod(name = { "eql?" }, alias = { "==", "equal?" })
 	public RubyBoolean isEql(ThreadContext context, IRubyObject arg) {
 		boolean r = (arg instanceof BaseJ) ? ((BaseJ) arg).getJavaObject()
 				.equals(getJavaObject()) : false;
 
 		if (!r) {
-			r = to_s().equals(arg.toString());
+			r = toString().equals( arg.toString() );
 		}
 		return r ? context.getRuntime().getTrue() : context.getRuntime()
 				.getFalse();
