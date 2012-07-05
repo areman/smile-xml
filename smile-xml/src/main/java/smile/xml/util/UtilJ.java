@@ -29,6 +29,7 @@ import org.jruby.RubyObject;
 import org.jruby.RubyString;
 import org.jruby.RubySymbol;
 import org.jruby.anno.JRubyClass;
+import org.jruby.anno.JRubyModule;
 import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
@@ -39,7 +40,7 @@ import smile.xml.EncodingJ;
 
 public class UtilJ {
 	private static final SchemaFactory schemaFactoryInstance = SchemaFactory
-			.newInstance("http://www.w3.org/2001/XMLSchema");
+			.newInstance( "http://www.w3.org/2001/XMLSchema");
 
 	private static final DocumentBuilderFactory factory = DocumentBuilderFactory
 			.newInstance();
@@ -106,7 +107,26 @@ public class UtilJ {
 		
 		return result;
 	}
-	
+
+	public static RubyModule defineModule( Ruby runtime, Class<?> klass ) {
+
+		JRubyModule anno    = klass.getAnnotation( JRubyModule.class );		
+		List<String> path   = split( anno.name()[0] );
+		String name         = path.remove( path.size()-1 );
+		
+		RubyModule module = getModule( runtime, path );
+		RubyModule result = module.defineModuleUnder( name );
+		
+		for( String i : anno.include() ) {
+			result.includeModule( getModule(runtime, split(i) ) );
+		}
+		
+		result.defineAnnotatedMethods( klass );
+		result.defineAnnotatedConstants( klass );
+		
+		return result;
+	}
+
 	public static RubyModule getModule(Ruby runtime, String...path) {
 		return getModule(runtime, Arrays.asList( path ) );
 	}
@@ -129,6 +149,13 @@ public class UtilJ {
 		return m;
 	}
 
+	public static RubyClass getClass(Ruby runtime, Class<? extends RubyObject> klass ) {
+		
+		JRubyClass anno     = klass.getAnnotation( JRubyClass.class );		
+		List<String> path   = split( anno.name()[0] );
+		return getClass( runtime, path );
+	}
+	
 	public static RubyClass getClass(Ruby runtime, String...path) {
 		return getClass(runtime, Arrays.asList(path) );
 	}

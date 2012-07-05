@@ -19,3 +19,5 @@ require File.dirname( __FILE__ ) + '/tc_node'
 require File.dirname( __FILE__ ) + '/tc_sax_parser'
 
 require File.dirname( __FILE__ ) + '/tc_document'
+
+#require File.dirname( __FILE__ ) + '/tc_document_write'

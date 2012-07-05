@@ -13,10 +13,10 @@ import org.jruby.RubyBoolean;
 import org.jruby.RubyClass;
 import org.jruby.RubyFixnum;
 import org.jruby.RubyHash;
-import org.jruby.RubyModule;
 import org.jruby.RubyNil;
 import org.jruby.RubyString;
 import org.jruby.RubySymbol;
+import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.javasupport.JavaObject;
 import org.jruby.runtime.Block;
@@ -33,6 +33,7 @@ import smile.xml.util.UtilJ;
 import smile.xml.xpath.XPathContextJ;
 import smile.xml.xpath.XPathObjectJ;
 
+@JRubyClass( name="LibXML::XML::Document" )
 public class DocumentJ extends BaseJ<Document> {
 	private static final long serialVersionUID = 1585911078348739867L;
 	private static final ObjectAllocator ALLOCATOR = new ObjectAllocator() {
@@ -44,18 +45,12 @@ public class DocumentJ extends BaseJ<Document> {
 	private RubyString version;
 	private EncodingJ encoding;
 
-	public static RubyClass define(Ruby runtime) {
-		RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML",
-				"XML" });
-		RubyClass result = module.defineClassUnder("Document",
-				runtime.getObject(), ALLOCATOR);
-		result.defineAnnotatedMethods(DocumentJ.class);
-		return result;
+	public static RubyClass define(Ruby runtime) {		
+		return UtilJ.defineClass(runtime, DocumentJ.class, ALLOCATOR);
 	}
 
 	private static RubyClass getRubyClass(Ruby runtime) {
-		return UtilJ.getClass(runtime, new String[] { "LibXML", "XML",
-				"Document" });
+		return UtilJ.getClass(runtime, DocumentJ.class );
 	}
 
 	public static DocumentJ newInstance(ThreadContext context) {

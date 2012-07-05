@@ -1,21 +1,20 @@
 package smile.xml.sax;
 
 import org.jruby.Ruby;
-import org.jruby.RubyClass;
 import org.jruby.RubyModule;
 import org.jruby.anno.JRubyMethod;
+import org.jruby.anno.JRubyModule;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
+
 import smile.xml.util.UtilJ;
 
+@JRubyModule( name="LibXML::XML::SaxParser::Callbacks" )
 public class SaxParserCallbacksJ
 {
   public static RubyModule define(Ruby runtime)
   {
-    RubyClass parent = UtilJ.getClass(runtime, "LibXML", "XML", "SaxParser" );
-    RubyModule result = parent.defineModuleUnder("Callbacks");
-    result.defineAnnotatedMethods(SaxParserCallbacksJ.class);
-    return result;
+	  return UtilJ.defineModule( runtime, SaxParserCallbacksJ.class );
   }
 
   @JRubyMethod(name="on_start_document")
@@ -58,12 +57,13 @@ public class SaxParserCallbacksJ
   {
   }
 
-  @JRubyMethod(name="on_start_element_ns")
-  public static void onStartElementNS(ThreadContext context, IRubyObject self, IRubyObject name, IRubyObject prefix, IRubyObject uri )
+  @JRubyMethod(name="on_start_element_ns", rest=true) 
+  public static void onStartElementNS(ThreadContext context, IRubyObject self, IRubyObject[] args )  
   {
+	  //IRubyObject attributes, IRubyObject prefix, IRubyObject uri, IRubyObject namespaces
   }
 
-  @JRubyMethod(name="on_end_element_ns")
+  @JRubyMethod(name="on_end_element_ns") 
   public static void onEndElementNS(ThreadContext context, IRubyObject self, IRubyObject name, IRubyObject prefix, IRubyObject uri )
   {
   }

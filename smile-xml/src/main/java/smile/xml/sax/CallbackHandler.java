@@ -55,16 +55,26 @@ public class CallbackHandler extends DefaultHandler2 {
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
 			
+//		System.out.println( uri );
+//		System.out.println( localName );
+//		System.out.println( qName );
+//		System.out.println("---------");
 		Map<IRubyObject, IRubyObject> map = new HashMap<IRubyObject,IRubyObject>();
 		for (int i = 0; i < atts.getLength(); i++)
 			map.put( toString( atts.getLocalName(i) ), toString( atts.getValue(i) ) );
-			
-			call( "on_start_element", toString(localName), toHash(map) );
+
+		call( "on_start_element", toString(qName), toHash(map) );
+//		if( localName.equals( qName ) )  {	
+//			
+//		} else {			
+//			System.err.println( "on_start_element_ns ");
+//			call( "on_start_element_ns", toString(localName), toHash(map), toString(""), toString(uri), context.getRuntime().getNil() );
+//		}
 	}
 	
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
-		call( "on_end_element", toString( localName ) );
+		call( "on_end_element", toString( qName ) );
 	}
 
 	@Override
