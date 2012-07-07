@@ -1,1 +1,2 @@
-Test
+Most of the original libxml test cases are successful. 
+Currently the focus is on the DOM and SAX APIs. Reader, RelaxNG, XPointer, ... are not implemented, yet.
