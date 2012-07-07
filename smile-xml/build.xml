@@ -58,7 +58,7 @@
 			<arg value="-S"/>
 			<arg value="gem"/>
 			<arg value="push"/>
-			<arg value="dist/smile-xml-1.0.1.gem"/>
+			<arg value="dist/smile-xml-1.0.2-java.gem"/>
 		</java>
 		
 	</target>
