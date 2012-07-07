@@ -11,7 +11,7 @@ Gem::Specification.new do |gem|
   gem.description = ""
 
   gem.authors  = [ 'Andre Kullmann' ]
-  gem.email    = ''
+  gem.email    = 'andre [dot] kullmann [at] googlemail [dot] com'
   gem.homepage = 'https://github.com/areman/smile-xml'
 
   gem.files = Dir[ '**/*' ]
