@@ -7,9 +7,9 @@ import java.io.StringReader;
 
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
-import org.jruby.RubyModule;
 import org.jruby.RubyObject;
 import org.jruby.RubyString;
+import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
@@ -21,8 +21,10 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 import smile.xml.ErrorJ;
+import smile.xml.ParserJ;
 import smile.xml.util.UtilJ;
 
+@JRubyClass(name="LibXML::XML::SaxParser")
 public class SaxParserJ extends RubyObject {
 	
 	private static final long serialVersionUID = -8712513236401964568L;
@@ -34,14 +36,11 @@ public class SaxParserJ extends RubyObject {
 	};
 	
 	public static RubyClass define(Ruby runtime) {
-		RubyModule module = UtilJ.getModule(runtime, "LibXML", "XML" );
-		RubyClass result = module.defineClassUnder( "SaxParser", runtime.getObject(), ALLOCATOR );
-		result.defineAnnotatedMethods(SaxParserJ.class);
-		return result;
+		return UtilJ.defineClass( runtime, SaxParserJ.class, ALLOCATOR );
 	}
 
 	public static RubyClass getRubyClass(Ruby runtime) {
-		return UtilJ.getClass(runtime, "LibXML", "XML", "SaxParser" );
+		return UtilJ.getClass(runtime, SaxParserJ.class );
 	}
 
 	@JRubyMethod(name = { "string" }, module = true)

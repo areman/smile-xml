@@ -1,11 +1,11 @@
 package smile.xml.xpath;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
 import javax.xml.namespace.NamespaceContext;
+
 import org.w3c.dom.Node;
 
 public class CustomNamespaceContext

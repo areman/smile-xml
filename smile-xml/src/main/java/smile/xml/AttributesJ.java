@@ -9,7 +9,6 @@ import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyFixnum;
 import org.jruby.RubyHash;
-import org.jruby.RubyModule;
 import org.jruby.RubyString;
 import org.jruby.RubySymbol;
 import org.jruby.anno.JRubyClass;
@@ -23,25 +22,25 @@ import org.w3c.dom.Node;
 
 import smile.xml.util.UtilJ;
 
-@JRubyClass(name = { "Attributes" })
+@JRubyClass(name = "LibXML::XML::Attributes", include = "Enumerable")
 public class AttributesJ extends BaseJ<Node> {
-	
+
 	private static final long serialVersionUID = -2519312417704775509L;
-	
-	public static final ObjectAllocator ALLOCATOR = new ObjectAllocator() {
+
+	private static final ObjectAllocator ALLOCATOR = new ObjectAllocator() {
 		public IRubyObject allocate(Ruby runtime, RubyClass klass) {
 			return new AttributesJ(runtime, klass);
 		}
 	};
 
 	public static RubyClass define(Ruby runtime) {
-		RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML",
-				"XML" });
-		RubyClass result = module.defineClassUnder("Attributes",
-				runtime.getObject(), ALLOCATOR);
-		result.includeModule(runtime.fastGetModule("Enumerable"));
-		result.defineAnnotatedMethods(AttributesJ.class);
-		return result;
+		return UtilJ.defineClass(runtime, AttributesJ.class, ALLOCATOR);
+	}
+
+	private NodeJ parent;
+
+	public void setParent(NodeJ node) {
+		this.parent = node;
 	}
 
 	@JRubyMethod(name = { "initialize" })
@@ -63,23 +62,34 @@ public class AttributesJ extends BaseJ<Node> {
 		super(ruby, clazz);
 	}
 
-	@JRubyMethod(name = { "[]" })
+	@JRubyMethod(name = "[]")
 	public IRubyObject getValue(ThreadContext context, IRubyObject pName) {
-		if ((pName instanceof RubySymbol)) {
-			pName = pName.asString();
-		}
+		
+		String name = toJavaString(context, pName );		
 
-		RubyString name = (RubyString) pName;
+		NamedNodeMap aa = getJavaObject().getAttributes();
+		if ( aa == null ) {
 
-		if (((Node) getJavaObject()).getAttributes() == null) {
 			return context.getRuntime().getNil();
 		}
-		Node node = ((Node) getJavaObject()).getAttributes().getNamedItem(
-				name.asJavaString());
+
+		Node node = aa.getNamedItem( name );
+
+
 
 		if (node == null) {
-			return context.getRuntime().getNil();
+
+			for( int i=0;i<aa.getLength(); i++ ) {
+				Node item = aa.item(i);
+//				System.out.println( item.get);
+				
+				if( item.getLocalName().equals( name ) ) {
+					node = item;
+					break;
+				}
+			}
 		}
+		
 		return context.getRuntime().newString(node.getTextContent());
 	}
 
@@ -112,21 +122,32 @@ public class AttributesJ extends BaseJ<Node> {
 
 	@JRubyMethod(name = { "first" })
 	public IRubyObject first(ThreadContext context) {
-		if (((Node) getJavaObject()).getAttributes().getLength() == 0) {
+		if (getJavaObject().getAttributes().getLength() == 0) {
 			return context.getRuntime().getNil();
 		}
 		AttrJ attr = AttrJ.newInstance(context);
-		attr.setJavaObject(((Node) getJavaObject()).getAttributes().item(0));
+		NamedNodeMap aa = getJavaObject().getAttributes();
+		attr.setJavaObject(aa.item(0));
+		attr.setParent(parent);
 		return attr;
 	}
 
 	@JRubyMethod(name = { "get_attribute" })
 	public IRubyObject getAttribute(ThreadContext context, RubyString name) {
-		Node node = ((Node) getJavaObject()).getAttributes().getNamedItem(
-				name.asJavaString());
+		NamedNodeMap aa = getJavaObject().getAttributes();
+		String string = name.asJavaString();
+		Node node = aa.getNamedItem(string);
+		if (node == null)
+			for (int i = 0; i < aa.getLength(); i++) {
+				Node a = aa.item(i);
+				if (a.getLocalName().equals(string)) {
+					node = a;
+					break;
+				}
+			}
 		if (node != null) {
 			AttrJ attr = AttrJ.newInstance(context);
-
+			attr.setParent(parent);
 			attr.setJavaObject(node);
 			return attr;
 		}
@@ -141,6 +162,7 @@ public class AttributesJ extends BaseJ<Node> {
 				namespace.asJavaString(), name.asJavaString());
 		if (node != null) {
 			AttrJ attr = AttrJ.newInstance(context);
+			attr.setParent(parent);
 			attr.setJavaObject(node);
 			return attr;
 		}
@@ -182,6 +204,7 @@ public class AttributesJ extends BaseJ<Node> {
 		for (int i = 0; i < list.getLength(); i++) {
 			AttrJ node = AttrJ.newInstance(context);
 			node.setJavaObject(list.item(i));
+			node.setParent(parent);
 			array.add(node);
 		}
 		return array;

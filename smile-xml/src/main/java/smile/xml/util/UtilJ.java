@@ -1,6 +1,7 @@
 package smile.xml.util;
 
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -20,6 +21,8 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
+import jline.Terminal;
+
 import org.jruby.Ruby;
 import org.jruby.RubyBoolean;
 import org.jruby.RubyClass;
@@ -34,7 +37,9 @@ import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import smile.xml.EncodingJ;
 
@@ -103,8 +108,9 @@ public class UtilJ {
 		}
 		
 		result.defineAnnotatedMethods( klass );
-		result.defineAnnotatedConstants( klass );
 		
+		result.defineAnnotatedConstants( klass );
+		 
 		return result;
 	}
 
@@ -125,6 +131,45 @@ public class UtilJ {
 		result.defineAnnotatedConstants( klass );
 		
 		return result;
+	}
+
+	public static IRubyObject toRubyString( ThreadContext context, Object obj ) {
+		
+		if( obj == null || obj instanceof RubyNil )
+			return context.getRuntime().getNil();
+		
+		if( obj instanceof RubyString )
+			return (RubyString) obj;
+		
+		if( obj instanceof String ) 
+			return context.getRuntime().newString( (String) obj );
+		
+		throw context.getRuntime().newTypeError("");
+	}
+
+	public static String toJavaString( ThreadContext context, Object obj ) {
+		return toJavaString(context, obj, null );
+	}
+	
+	public static <T> T nvl( T obj, T defaultValue ) {
+		return obj == null ? defaultValue : obj;
+	}
+	
+	public static String toJavaString( ThreadContext context, Object obj, String defaultValue ) {
+		
+		if( obj == null || obj instanceof RubyNil )
+			return defaultValue;
+		
+		if( obj instanceof RubyString )
+			return ((RubyString) obj).asJavaString();
+
+		if( obj instanceof RubySymbol )
+			return ((RubySymbol) obj).asJavaString();
+
+		if( obj instanceof String ) 
+			return (String) obj;
+		
+		throw context.getRuntime().newTypeError("");
 	}
 
 	public static RubyModule getModule(Ruby runtime, String...path) {
@@ -186,6 +231,27 @@ public class UtilJ {
 		}
 	}
 
+	public static void write( Writer writer, Node node, boolean intent, String encoding ) {
+		try {
+				StreamResult result = new StreamResult(writer);
+				DOMSource source = new DOMSource(node);
+				Transformer transformer = getTransformer();
+				
+				if( encoding != null ) {
+					transformer.setOutputProperty( OutputKeys.ENCODING, encoding );
+				}
+				
+				
+				transformer.transform( source, result);				
+				
+		} catch( RuntimeException e) {
+			throw e;
+		} catch( Exception e ) {
+			throw new RuntimeException(e);
+		}
+	}
+
+
 	public static String toString(Node node, boolean escape ) {
 		return toString( node, escape, (String) null );
 	}
@@ -197,14 +263,16 @@ public class UtilJ {
 	public static String toString(Node node, boolean escape, String encoding ) {
 		StringWriter writer = new StringWriter();
 		try {
-			try {
+			try { 
 				StreamResult result = new StreamResult(writer);
 				DOMSource source = new DOMSource(node);
 				Transformer transformer = getTransformer();
-				transformer.transform(source, result);
 				
+				//OMIT_XML_DECLARATION
 				if( encoding != null )
 					transformer.setOutputProperty( OutputKeys.ENCODING, encoding );
+				
+				transformer.transform(source, result);
 				
 				String str = writer.toString().replace(
 						"<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "");
@@ -271,6 +339,26 @@ public class UtilJ {
 		throw new IllegalArgumentException(object.getClass().getName()
 				+ " can not be a String");
 	}
+	
+	public static Boolean toJavaBoolean( ThreadContext context, Object object ) {
+		return toJavaBoolean(context, object, null );
+	}
+	
+	public static Boolean toJavaBoolean( ThreadContext context, Object object, Boolean defaultValue ) {
+
+		if ( object == null || object instanceof RubyNil) 
+			return defaultValue;
+		
+		if (object instanceof Boolean) 
+			return (Boolean) object;
+		
+		if (object instanceof RubyBoolean ) {
+			return ((RubyBoolean) object).isTrue();
+		}
+		
+		throw context.getRuntime().newArgumentError("");
+	}
+
 
 	public static RubyBoolean toBool(ThreadContext context, boolean value) {
 		return value ? context.getRuntime().getTrue() : context.getRuntime()
@@ -314,5 +402,23 @@ public class UtilJ {
 				return builder;
 			}
 		};
+	}
+
+	public static Node find( NamedNodeMap map, String name ) {
+		
+		Node node = map.getNamedItem( name );
+
+		if( node != null )
+			return node;
+		
+		for( int i=0;i<map.getLength(); i++ ) {
+			Node item = map.item(i);
+			
+			if( item.getLocalName().equals( name ) ) {
+				return item;
+			}
+		}
+		
+		return null;
 	}
 }

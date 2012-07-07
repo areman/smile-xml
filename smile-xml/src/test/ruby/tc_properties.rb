@@ -21,14 +21,15 @@ class Testattributes < Test::Unit::TestCase
     attributes = @doc.root.attributes
     
     assert_instance_of(XML::Attributes, attributes)
-    attribute = attributes.first
-    assert_equal('uga', attribute.name)
-    assert_equal('booga', attribute.value)
+    f = attributes.first
+    l = f.next
+    assert( f.name.eql?( 'uga' ) || f.name.eql?( 'foo' ) )
+    assert( l.name.eql?( 'uga' ) || l.name.eql?( 'foo' ) )
 
-    attribute = attribute.next
-    assert_instance_of(XML::Attr, attribute)
-    assert_equal('foo', attribute.name)
-    assert_equal('bar', attribute.value)
+    n = f.next
+    assert_instance_of(XML::Attr, n)
+    assert( n.name.eql?( 'uga' ) || n.name.eql?( 'foo' ) )
+
   end
   
   def test_no_attributes

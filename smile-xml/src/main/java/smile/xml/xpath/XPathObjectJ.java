@@ -2,20 +2,20 @@ package smile.xml.xpath;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
+
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
+
 import org.jruby.Ruby;
 import org.jruby.RubyArray;
 import org.jruby.RubyBoolean;
 import org.jruby.RubyClass;
 import org.jruby.RubyFixnum;
-import org.jruby.RubyModule;
 import org.jruby.RubyNumeric;
 import org.jruby.RubyObject;
 import org.jruby.RubyString;
+import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
@@ -24,12 +24,15 @@ import org.jruby.runtime.builtin.IRubyObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import smile.xml.BaseJ;
 import smile.xml.NodeJ;
 import smile.xml.NodeSetJ;
 import smile.xml.util.UtilJ;
 
+@JRubyClass( name="LibXML::XML::XPath::Object", include="Enumerable" )
 public class XPathObjectJ extends RubyObject {
+	
 	private static final long serialVersionUID = 4673137342270845475L;
 	
 	private static final ObjectAllocator ALLOCATOR = new ObjectAllocator() {
@@ -40,22 +43,19 @@ public class XPathObjectJ extends RubyObject {
 	
 
 	public static RubyClass define(Ruby runtime) {
-		RubyModule module = UtilJ.getModule(runtime,"LibXML", "XML", "XPath"  );
-		RubyClass result = module.defineClassUnder("Object",
-				runtime.getObject(), ALLOCATOR);
-		result.includeModule(runtime.getModule("Enumerable"));
-		result.defineAnnotatedMethods(XPathObjectJ.class);
-		return result;
+		return UtilJ.defineClass( runtime,XPathObjectJ.class, ALLOCATOR );
 	}
 
 	private static RubyClass getRubyClass(Ruby runtime) {
-		return UtilJ.getClass(runtime, "LibXML", "XML", "XPath", "Object");
+		return UtilJ.getClass(runtime, XPathObjectJ.class );
 	}
 
-	public static XPathObjectJ newInstance(ThreadContext context,
-			IRubyObject expression, IRubyObject document,
+	public static XPathObjectJ newInstance(
+			ThreadContext context,
+			IRubyObject expression, 
+			IRubyObject document,
 			IRubyObject[] namespaces) {
-		List args = new ArrayList();
+		List<IRubyObject> args = new ArrayList<IRubyObject>();
 		args.add(expression);
 		args.add(document);
 		args.addAll(Arrays.asList(namespaces));
@@ -74,22 +74,29 @@ public class XPathObjectJ extends RubyObject {
 		super(runtime, metaClass);
 	}
 
-	@JRubyMethod(name = { "initialize" }, required = 1, rest = true)
+	@JRubyMethod(name = "initialize", rest = true )
 	public void initialize(ThreadContext context, IRubyObject[] args) {
-		this.expression = ((RubyString) args[0]);
-		this.node = ((Node) ((BaseJ) args[1]).getJavaObject());
+		
+		if( args[0] instanceof RubyString ) {
+			this.expression =  (RubyString) args[0];
+		} else { 
+			this.expression =  ((XPathExpressionJ)args[0]).getExpression();
+		}
+		
+		this.node = (Node) ((BaseJ<?>) args[1]).getJavaObject();
 
 		this.namespaces = new String[args.length - 2];
 		for (int i = 2; i < args.length; i++)
 			this.namespaces[(i - 2)] = args[i].asJavaString();
+		
+//		System.out.println( Arrays.toString(namespaces));
 	}
 
 	@JRubyMethod(name = { "each" })
 	public void iterateOver(ThreadContext context, Block block)
 			throws Exception {
 		RubyArray array = getResult(context);
-		for (Iterator i$ = array.iterator(); i$.hasNext();) {
-			Object obj = i$.next();
+		for (Object obj : array ) {
 			IRubyObject o = (IRubyObject) obj;
 			block.yield(context, o);
 			if (block.isEscaped())
@@ -176,7 +183,7 @@ public class XPathObjectJ extends RubyObject {
 			throw e;
 		}
 
-		List array = new ArrayList();
+		List<IRubyObject> array = new ArrayList<IRubyObject>();
 		for (int i = 0; i < list.getLength(); i++) {
 			NodeJ node = NodeJ.newInstance(context);
 			//node.setDocPresent( this.node instanceof Document ? true : ((Node)).isDocPresent() );

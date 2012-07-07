@@ -25,7 +25,10 @@ public class EncodingJ extends RubyObject {
 	};
 
 	public static RubyClass define(Ruby runtime) {
-		return UtilJ.defineClass( runtime, EncodingJ.class, ALLOCATOR );
+		RubyClass c = UtilJ.defineClass( runtime, EncodingJ.class, ALLOCATOR );
+		c.setConstant("UTF_8", runtime.newString("UTF-8") );
+		c.setConstant("ISO_8859_1", runtime.newString("ISO-8859-1") );
+		return c;
 	}
 
 	@JRubyConstant
@@ -73,12 +76,18 @@ public class EncodingJ extends RubyObject {
 	public void initialize(ThreadContext context, IRubyObject[] args) {
 		if (args.length > 0 && args[0] instanceof RubyString) {
 			this.encoding = (RubyString) args[0];
+			this.encoding = this.encoding.upcase(context);			
 		}
 	}
 	
 	@Override
 	public String asJavaString() {
 		return encoding == null ? "" : encoding.asJavaString();
+	}
+	
+	public IRubyObject toConstant( ThreadContext context ) {
+				
+		return encoding;
 	}
 
 

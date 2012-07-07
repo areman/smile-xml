@@ -1,6 +1,12 @@
 package smile.xml;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.transform.dom.DOMSource;
@@ -18,7 +24,6 @@ import org.jruby.RubyString;
 import org.jruby.RubySymbol;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
-import org.jruby.javasupport.JavaObject;
 import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
@@ -31,6 +36,7 @@ import org.xml.sax.SAXParseException;
 
 import smile.xml.util.UtilJ;
 import smile.xml.xpath.XPathContextJ;
+import smile.xml.xpath.XPathExpressionJ;
 import smile.xml.xpath.XPathObjectJ;
 
 @JRubyClass( name="LibXML::XML::Document" )
@@ -61,8 +67,7 @@ public class DocumentJ extends BaseJ<Document> {
 	@JRubyMethod(name = { "file" }, module = true)
 	public static DocumentJ fromFile(ThreadContext context, IRubyObject klass,
 			IRubyObject pFile) throws Exception {
-		ParserJ parser = ParserJ.fromFile(context, pFile,
-				RubyHash.newHash(context.getRuntime()));
+		ParserJ parser = ParserJ.fromFile(context, pFile,RubyHash.newHash(context.getRuntime()));
 
 		return parser.parse(context);
 	}
@@ -169,7 +174,7 @@ public class DocumentJ extends BaseJ<Document> {
 		return context.getRuntime().newString(string);
 	}
 
-	@JRubyMethod(name = { "child" })
+	@JRubyMethod(name ="child")
 	public NodeJ getChild(ThreadContext context) {
 		NodeJ node = NodeJ.newInstance(context);
 		node.setJavaObject(((Document) getJavaObject()).getFirstChild());
@@ -209,7 +214,7 @@ public class DocumentJ extends BaseJ<Document> {
 
 	@JRubyMethod( name="encoding" )
 	public IRubyObject getEncoding(ThreadContext context) {
-		return this.encoding;
+		return this.encoding == null ? null : this.encoding.toConstant(context);
 	}
 
 	@JRubyMethod( name="encoding=" )
@@ -227,11 +232,62 @@ public class DocumentJ extends BaseJ<Document> {
 
 	@JRubyMethod(name = { "find" }, required = 1, optional = 1)
 	public IRubyObject find(ThreadContext context, IRubyObject[] args) {
-		RubyString xpath = (RubyString) args[0];
+		
+		if( args.length == 0 || ( ( args[0] instanceof RubyString ) == false && ( args[0] instanceof XPathExpressionJ ) == false ) ) {
+			
+			throw context.getRuntime().newTypeError("Argument should be an intance of a String or XPath::Expression");
+		}
+		
+		IRubyObject xpath = args[0];
 
-		IRubyObject[] namespaces = UtilJ.toStringArray(context, args, 1);
+		IRubyObject[] namespaces;
+		if( args.length > 1 && ( args[1] instanceof RubyString || args[1] instanceof RubyArray ) )
+			namespaces = UtilJ.toStringArray(context, args, 1);
+		else if( args.length > 1 && args[1] instanceof RubyHash ) {
+			Map map = (Map) args[1];
+			List<IRubyObject> list = new ArrayList<IRubyObject>(map.size());
+			for( Object o : map.entrySet() ) {
+				Map.Entry e = (Entry) o;
+				String k = toJavaString(context, e.getKey() );
+				String v = toJavaString(context, e.getValue() );
+				list.add( toRubyString(context, k + ":" + v ) );
+			}
+			namespaces = list.toArray( new IRubyObject[ list.size() ] );
+		} else {
+			namespaces = new IRubyObject[]{};
+		}
 
-		return XPathObjectJ.newInstance(context, xpath, this, namespaces);
+		return XPathObjectJ.newInstance( context, xpath, this, namespaces );
+	}
+
+	@JRubyMethod(name = "debug" )
+	public IRubyObject debug(ThreadContext context) {
+		return context.getRuntime().getFalse();
+	}
+
+	@JRubyMethod(name = "save", rest=true )
+	public IRubyObject save(ThreadContext context, IRubyObject[] args ) throws IOException {
+		
+		RubyString file = (RubyString) args[0];
+		Boolean indent  = null;
+		String encoding = null;
+		if( args.length > 1 ) {
+			RubyHash hash = (RubyHash) args[1];
+			Object tmp = hash.get( context.getRuntime().newSymbol("indent") );
+			indent   = UtilJ.toJavaBoolean( context, tmp );
+			tmp = hash.get( context.getRuntime().newSymbol("encoding") );
+			encoding = UtilJ.toJavaString( context, tmp );
+		}
+		
+		File f = new File( file.asJavaString() );
+		FileWriter writer = new FileWriter( file.asJavaString() );
+		try {
+			UtilJ.write(writer, getJavaObject(), nvl( indent, true ), nvl( encoding, EncodingJ.UTF_8 ) );
+		} finally {
+			writer.close();
+		}
+		
+		return context.getRuntime().newFixnum( f.length() );
 	}
 
 	@JRubyMethod(name = { "version" })
@@ -323,69 +379,54 @@ public class DocumentJ extends BaseJ<Document> {
 		Validator validator = ((Schema) schema.getJavaObject()).newValidator();
 		final Block handler = ErrorJ.getErrorHandler(context, null);
 		final AtomicBoolean b = new AtomicBoolean(true);
-		if ((handler != null) || (block != null))
+		if( handler != null || ( block != null && block.isGiven() ) )
 			validator.setErrorHandler(new ErrorHandler() {
+				
+				private void callHandler( IRubyObject message, IRubyObject exception ) {
+					IRubyObject[] args = { message, exception };
+					handler.call(context, args, null );
+				}
+				
+				private void callBlock( IRubyObject exception ) {
+					IRubyObject[] args = { exception };
+					block.call(context, args, null );
+				}
+				
+				private void invoke( Exception exception ) {
+					RubyString message = context.getRuntime().newString( exception.getMessage());
+					IRubyObject obj = ErrorJ.newInstance( context, exception.getMessage() );
+					if( block != null && block.isGiven() )
+						callBlock( obj );
+					if( handler != null && handler.isGiven() )
+						callHandler(message, obj );
+
+				}
+
 				public void warning(SAXParseException exception)
 						throws SAXException {
-					RubyString message = context.getRuntime().newString(
-							exception.getMessage());
-
-					IRubyObject obj = JavaObject.wrap(context.getRuntime(),
-							exception);
-
-					if (handler != null)
-						handler.yield(context, obj);
-					if (block != null) {
-						block.yield(context, RubyArray.newArray(
-								context.getRuntime(), new IRubyObject[] {
-										message, obj }));
-					}
-
+					
+					invoke( exception );
 					b.set(false);
 				}
 
 				public void fatalError(SAXParseException exception)
 						throws SAXException {
-					RubyString message = context.getRuntime().newString(
-							exception.getMessage());
 
-					IRubyObject obj = JavaObject.wrap(context.getRuntime(),
-							exception);
-
-					if (handler != null)
-						handler.yield(context, obj);
-					if (block != null) {
-						block.yield(context, RubyArray.newArray(
-								context.getRuntime(), new IRubyObject[] {
-										message, obj }));
-					}
-
+					invoke( exception );
 					b.set(false);
 				}
 
 				public void error(SAXParseException exception)
 						throws SAXException {
-					RubyString message = context.getRuntime().newString(
-							exception.getMessage());
 
-					IRubyObject obj = JavaObject.wrap(context.getRuntime(),
-							exception);
-
-					if (handler != null)
-						handler.yield(context, obj);
-					if (block != null) {
-						block.yield(context, RubyArray.newArray(
-								context.getRuntime(), new IRubyObject[] {
-										message, obj }));
-					}
-
+					invoke( exception );
 					b.set(false);
 				}
 			});
 		try {
-			validator.validate(new DOMSource((Node) getJavaObject()));
+			validator.validate(new DOMSource(getJavaObject() ));
 		} catch (SAXException e) {
-			throw context.getRuntime().newStandardError(e.getMessage());
+			throw ErrorJ.newRaiseException(context, e.getMessage());
 		}
 
 		return b.get() ? context.getRuntime().getTrue() : context.getRuntime()
