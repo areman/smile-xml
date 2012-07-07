@@ -7,7 +7,7 @@ Gem::Specification.new do |gem|
   gem.version  = '1.0.2'
   gem.date     = '2012-07-06'
 
-  gem.summary     = "LibXML API for JRuby"
+  gem.summary     = "LibXMLRuby compatibility layer for jruby"
   gem.description = ""
 
   gem.authors  = [ 'Andre Kullmann' ]

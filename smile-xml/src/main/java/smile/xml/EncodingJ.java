@@ -34,11 +34,11 @@ public class EncodingJ extends RubyObject {
 	@JRubyConstant
 	public static final String NONE = null;
 
-	@JRubyConstant
+//	@JRubyConstant
 	public static final String UTF_8 = "UTF-8";
-	
-	@JRubyConstant
-	public static final String ISO_8859_1 = "ISO-8859-1";
+//	
+//	@JRubyConstant
+//	public static final String ISO_8859_1 = "ISO-8859-1";
 
 	public static EncodingJ get(ThreadContext context, Object object ) {
 		if( object == null )
