@@ -26,24 +26,19 @@ public class NamespaceJ extends RubyObject {
 	private RubyString href;
 
 	public static RubyClass define(Ruby runtime) {
-		RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML",
-				"XML" });
-		RubyClass result = module.defineClassUnder("Namespace",
-				runtime.getObject(), ALLOCATOR);
+		RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML", "XML" });
+		RubyClass result = module.defineClassUnder("Namespace",	runtime.getObject(), ALLOCATOR);
 		result.defineAnnotatedMethods(NamespaceJ.class);
 		return result;
 	}
 
 	private static RubyClass getRubyClass(Ruby runtime) {
-		return UtilJ.getClass(runtime, new String[] { "LibXML", "XML",
-				"Namespace" });
+		return UtilJ.getClass(runtime, new String[] { "LibXML", "XML", "Namespace" });
 	}
 
-	public static NamespaceJ newInstance(ThreadContext context,
-			IRubyObject node, IRubyObject prefix, IRubyObject uri) {
-		IRubyObject[] args = { node, uri, prefix };
-		return (NamespaceJ) getRubyClass(context.getRuntime()).newInstance(
-				context, args, null);
+	public static NamespaceJ newInstance(ThreadContext context,	IRubyObject node, IRubyObject prefix, IRubyObject href) {
+		IRubyObject[] args = { node, prefix, href };
+		return (NamespaceJ) getRubyClass(context.getRuntime()).newInstance(context, args, null);
 	}
 
 	public NamespaceJ(Ruby runtime, RubyClass metaClass) {
@@ -51,8 +46,7 @@ public class NamespaceJ extends RubyObject {
 	}
 
 	@JRubyMethod(name = { "initialize" })
-	public void initialize(ThreadContext context, IRubyObject pNode,
-			IRubyObject pPrefix, IRubyObject pHref) {
+	public void initialize(ThreadContext context, IRubyObject pNode, IRubyObject pPrefix, IRubyObject pHref) {
 		this.node = ((NodeJ) pNode);
 		if (!pHref.isNil())
 			this.href = ((RubyString) pHref);
@@ -62,8 +56,7 @@ public class NamespaceJ extends RubyObject {
 
 	@JRubyMethod(name = { "prefix" })
 	public IRubyObject getPrefix(ThreadContext context) {
-		return this.prefix == null ? context.getRuntime().getNil()
-				: this.prefix;
+		return this.prefix == null ? context.getRuntime().getNil() : this.prefix;
 	}
 
 	@JRubyMethod(name = { "href" })
