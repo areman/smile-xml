@@ -681,7 +681,7 @@ public class NodeJ extends BaseJ<Node> {
 		return UtilJ.toBool(context, false);
 	}
 
-	@JRubyMethod(name = { "namespacess=" })
+	@JRubyMethod(name = { "namespaces" })
 	public NamespacesJ getNamespaces(ThreadContext context) {
 		return NamespacesJ.newInstance(context, this);
 	}
