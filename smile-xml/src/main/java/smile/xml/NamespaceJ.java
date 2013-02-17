@@ -3,6 +3,7 @@ package smile.xml;
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyModule;
+import org.jruby.RubyNil;
 import org.jruby.RubyObject;
 import org.jruby.RubyString;
 import org.jruby.anno.JRubyMethod;
@@ -47,10 +48,14 @@ public class NamespaceJ extends RubyObject {
 
 	@JRubyMethod(name = { "initialize" })
 	public void initialize(ThreadContext context, IRubyObject pNode, IRubyObject pPrefix, IRubyObject pHref) {
-		this.node = ((NodeJ) pNode);
-		if (!pHref.isNil())
+		if (! pNode.isNil()) {
+			this.node = ((NodeJ) pNode);
+		} else {
+			throw context.getRuntime().newTypeError("wrong argument type nil (expected Data)");
+		}
+		if (! pHref.isNil())
 			this.href = ((RubyString) pHref);
-		if (!pPrefix.isNil())
+		if (! pPrefix.isNil())
 			this.prefix = ((RubyString) pPrefix);
 	}
 
