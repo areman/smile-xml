@@ -73,4 +73,16 @@ public class NamespaceJ extends RubyObject {
 	public IRubyObject getNode(ThreadContext context) {
 		return this.node;
 	}
+	
+	@JRubyMethod(name = { "==" })
+	public IRubyObject isEqual(ThreadContext context, IRubyObject pOther) {
+		if (pOther instanceof NamespaceJ) {
+			NamespaceJ otherNS = (NamespaceJ) pOther;
+			if (this.prefix.equals(otherNS.prefix) && this.href.equals(otherNS.href)
+					&& this.node.equals(otherNS.node)) {
+				return context.getRuntime().getTrue();
+			}
+		}
+		return context.getRuntime().getFalse();
+	}
 }
