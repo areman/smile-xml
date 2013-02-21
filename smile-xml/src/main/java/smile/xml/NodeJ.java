@@ -126,16 +126,16 @@ public class NodeJ extends BaseJ<Node> {
 
 	@JRubyMethod(name = { "initialize" }, optional = 3)
 	public void initialize(ThreadContext context, IRubyObject[] args) {
-		RubyString name = (RubyString) (RubyString) (args.length > 0 ? args[0] : null);
-		RubyString content = (RubyString) (RubyString) (args.length > 1 ? args[1] : null);
-		NamespaceJ namespace = (NamespaceJ) (NamespaceJ) (args.length > 2 ? args[2] : null);
+		RubyString name = (RubyString) (args.length > 0 ? args[0] : null);
+		RubyString content = (RubyString) (args.length > 1 ? args[1] : null);
+		NamespaceJ namespace = (NamespaceJ) (args.length > 2 ? args[2] : null);
 
 		if (name != null) {
 			Document doc = UtilJ.getBuilder().newDocument();
-			Element elemet = doc.createElement(name.asJavaString());
+			Element element = doc.createElement(name.asJavaString());
 			if ((content != null) && (!content.isNil()))
-				elemet.setTextContent(content.asJavaString());
-			setJavaObject(elemet);
+				element.setTextContent(content.asJavaString());
+			setJavaObject(element);
 		}
 	}
 
