@@ -252,8 +252,7 @@ public class NodeJ extends BaseJ<Node> {
 		boolean r = toString(context, new IRubyObject[0]).equals(
 				other.toString(context, new IRubyObject[0]));
 
-		return r ? context.getRuntime().getTrue() : context.getRuntime()
-				.getFalse();
+		return UtilJ.toBool(context, r);
 	}
 
 	@JRubyMethod(name ="detect")
@@ -333,9 +332,8 @@ public class NodeJ extends BaseJ<Node> {
 
 	@JRubyMethod(name = { "attribute?" })
 	public RubyBoolean isAttribute(ThreadContext context) {
-		boolean r = ((Node) getJavaObject()).getNodeType() == 2;
-		return r ? context.getRuntime().getTrue() : context.getRuntime()
-				.getFalse();
+		boolean r = ((Node) getJavaObject()).getNodeType() == ATTRIBUTE_NODE;
+		return UtilJ.toBool(context, r);
 	}
 
 	@JRubyMethod(name = { "attribute_decl?" })
@@ -354,8 +352,7 @@ public class NodeJ extends BaseJ<Node> {
 	@JRubyMethod(name = { "attributes?" }, alias = { "properties?" })
 	public RubyBoolean hasAttributes(ThreadContext context) {
 		boolean r = ((Node) getJavaObject()).getAttributes().getLength() != 0;
-		return r ? context.getRuntime().getTrue() : context.getRuntime()
-				.getFalse();
+		return UtilJ.toBool(context, r);
 	}
 
 //	@JRubyMethod(name ="base_uri")
