@@ -75,10 +75,12 @@ public class NodeJ extends BaseJ<Node> {
 
 	@JRubyConstant
 	public static final int NOTATION_NODE = 12;
+	
+	@JRubyConstant
+	public static final int NAMESPACE_DECL = 18;
 
 	@JRubyConstant
 	public static final int PROCESSING_INSTRUCTION_NODE = 7;
-
 
 	@JRubyConstant
 	public static final int FRAGMENT_NODE = 11;

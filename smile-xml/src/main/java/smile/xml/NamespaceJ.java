@@ -2,6 +2,7 @@ package smile.xml;
 
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
+import org.jruby.RubyFixnum;
 import org.jruby.RubyModule;
 import org.jruby.RubyObject;
 import org.jruby.RubyString;
@@ -9,6 +10,7 @@ import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
+
 import smile.xml.util.UtilJ;
 
 public class NamespaceJ extends RubyObject {
@@ -47,15 +49,17 @@ public class NamespaceJ extends RubyObject {
 
 	@JRubyMethod(name = { "initialize" })
 	public void initialize(ThreadContext context, IRubyObject pNode, IRubyObject pPrefix, IRubyObject pHref) {
-		if (! pNode.isNil()) {
-			this.node = ((NodeJ) pNode);
-		} else {
+		if (pNode.isNil()) {
 			throw context.getRuntime().newTypeError("wrong argument type nil (expected Data)");
 		}
-		if (! pHref.isNil())
+		
+		this.node = ((NodeJ) pNode);
+		if (! pPrefix.isNil()) {
+			this.prefix = ((RubyString) pPrefix);	
+		}
+		if (! pHref.isNil()) {
 			this.href = ((RubyString) pHref);
-		if (! pPrefix.isNil())
-			this.prefix = ((RubyString) pPrefix);
+		}
 	}
 
 	@JRubyMethod(name = { "prefix" })
@@ -71,6 +75,17 @@ public class NamespaceJ extends RubyObject {
 	@JRubyMethod(name = { "node" })
 	public IRubyObject getNode(ThreadContext context) {
 		return this.node;
+	}
+	
+	@JRubyMethod(name = { "node_type" })
+	public IRubyObject getNodeType(ThreadContext context) {
+		return new RubyFixnum(context.getRuntime(), NodeJ.NAMESPACE_DECL);
+	}
+	
+	@JRubyMethod(name = { "next" })
+	public IRubyObject getNext(ThreadContext context) {
+		// TODO
+		return context.getRuntime().getNil();
 	}
 	
 	@JRubyMethod(name = { "==" })
