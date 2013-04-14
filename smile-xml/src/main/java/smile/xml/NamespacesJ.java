@@ -5,6 +5,7 @@ import org.jruby.RubyClass;
 import org.jruby.RubyModule;
 import org.jruby.RubyObject;
 import org.jruby.anno.JRubyMethod;
+import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -47,6 +48,42 @@ public class NamespacesJ extends RubyObject {
 	public void initialize(ThreadContext context, IRubyObject pNode) {
 		this.node = ((NodeJ) pNode);
 	}
+	
+	@JRubyMethod(name = { "default" })
+	public IRubyObject getDefault(ThreadContext context) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
+	
+	@JRubyMethod(name = { "default_prefix=" })
+	public void setDefaultPrefix(ThreadContext context, IRubyObject pPrefix) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
+	
+	@JRubyMethod(name = { "definitions" })
+	public IRubyObject getDefinitions(ThreadContext context) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
+	
+	@JRubyMethod(name = { "each" })
+	public IRubyObject each(ThreadContext context, Block block) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
+	
+	@JRubyMethod(name = { "find_by_href" })
+	public IRubyObject findByHref(ThreadContext context, IRubyObject pHref) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
+	
+	@JRubyMethod(name = { "find_by_prefix" }, optional = 1)
+	public IRubyObject findByPrefix(ThreadContext context, IRubyObject pPrefix) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
 
 	@JRubyMethod(name = { "namespace" })
 	public IRubyObject getNamespace(ThreadContext context) {
@@ -59,5 +96,16 @@ public class NamespacesJ extends RubyObject {
 		IRubyObject uri = tmp == null ? run.getNil() : run.newString(tmp);
 
 		return NamespaceJ.newInstance(context, this.node, prefix, uri);
+	}
+	
+	@JRubyMethod(name = { "namespace=" })
+	public void setNamespace(ThreadContext context, IRubyObject pNamespace) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
+	
+	@JRubyMethod(name = { "node" })
+	public IRubyObject getNode(ThreadContext context) {
+		return this.node;
 	}
 }
