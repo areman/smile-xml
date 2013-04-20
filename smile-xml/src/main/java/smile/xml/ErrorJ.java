@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyException;
-import org.jruby.RubyModule;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyConstant;
 import org.jruby.anno.JRubyMethod;
@@ -48,7 +47,6 @@ public class ErrorJ extends RubyException {
 			String message) {
 		return RubyException.newException(context.getRuntime(),getRubyClass(context.getRuntime()), message);
 	}
-
 	
 	@JRubyConstant
 	public static final IRubyObject VERBOSE_HANDLER = null;
@@ -76,9 +74,6 @@ public class ErrorJ extends RubyException {
 
 	@JRubyConstant
 	public static final IRubyObject ERROR = null;
-	
-
-	
 	
 	private ErrorJ(Ruby runtime, RubyClass metaClass) {
 		super(runtime, metaClass);
