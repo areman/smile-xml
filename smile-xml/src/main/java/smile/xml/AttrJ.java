@@ -38,6 +38,11 @@ public class AttrJ extends NodeJ {
 		return (AttrJ) getRubyClass(context.getRuntime()).newInstance(context,
 				new IRubyObject[0], null);
 	}
+	
+	public static AttrJ newInstance(ThreadContext context, NodeJ node, RubyString name, RubyString value, NamespaceJ ns) {
+		IRubyObject[] args = { node, name, value, ns };
+		return (AttrJ) getRubyClass(context.getRuntime()).newInstance(context, args, null);
+	}
 
 	private NodeJ parent;
 	

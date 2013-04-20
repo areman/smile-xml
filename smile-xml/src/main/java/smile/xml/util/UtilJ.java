@@ -424,4 +424,11 @@ public class UtilJ {
 		
 		return null;
 	}
+	
+	public static String getRubyClassName(IRubyObject rObject) {
+		if (rObject.isNil()) {
+			return "nil";
+		}
+		return rObject.getMetaClass().asString().asJavaString();
+	}
 }

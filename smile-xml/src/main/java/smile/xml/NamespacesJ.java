@@ -9,6 +9,7 @@ import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import smile.xml.util.UtilJ;
 
@@ -100,8 +101,22 @@ public class NamespacesJ extends RubyObject {
 	
 	@JRubyMethod(name = { "namespace=" })
 	public void setNamespace(ThreadContext context, IRubyObject pNamespace) {
-		// TODO
-		throw context.getRuntime().newRuntimeError("not yet implemented");
+		if ( ! (pNamespace instanceof NamespaceJ)) {
+			throw context.getRuntime().newTypeError("wrong argument type " + UtilJ.getRubyClassName(pNamespace) + " (expected Data)");
+		}
+		
+		NamespaceJ namespace = (NamespaceJ) pNamespace;
+		Document doc = node.getJavaObject().getOwnerDocument();
+		
+		String namespaceURI = "";
+		String qualifiedName = node.getJavaObject().getNodeName();
+		if (! namespace.getHref(context).isNil()) {
+			namespaceURI = namespace.getHref(context).asJavaString();
+		}
+		if (! namespace.getPrefix(context).isNil()) {
+			qualifiedName = namespace.getPrefix(context).asJavaString() + ":" + node.getJavaObject().getNodeName();
+		}
+		doc.renameNode(node.getJavaObject(), namespaceURI, qualifiedName);
 	}
 	
 	@JRubyMethod(name = { "node" })

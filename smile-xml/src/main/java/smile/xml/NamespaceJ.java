@@ -49,27 +49,41 @@ public class NamespaceJ extends RubyObject {
 
 	@JRubyMethod(name = { "initialize" })
 	public void initialize(ThreadContext context, IRubyObject pNode, IRubyObject pPrefix, IRubyObject pHref) {
-		if (pNode.isNil()) {
-			throw context.getRuntime().newTypeError("wrong argument type nil (expected Data)");
+		if ( ! (pNode instanceof NodeJ)) {
+			throw context.getRuntime().newTypeError("wrong argument type " + UtilJ.getRubyClassName(pNode) + " (expected Data)");
 		}
 		
-		this.node = ((NodeJ) pNode);
+		node = ((NodeJ) pNode);
 		if (! pPrefix.isNil()) {
-			this.prefix = ((RubyString) pPrefix);	
+			prefix = (RubyString) pPrefix;	
 		}
 		if (! pHref.isNil()) {
-			this.href = ((RubyString) pHref);
+			href = (RubyString) pHref;
 		}
+		
+		String name = "xmlns";
+		if (prefix != null) {
+			name = name + ":" + prefix.asJavaString();
+		}
+		
+		String value = "";
+		if (href != null) {
+			value = href.asJavaString();
+		}
+		
+		// define namespace as "xmlns" attribute
+		AttrJ.newInstance(context, node, UtilJ.toRubyString(context, name).asString(), 
+				UtilJ.toRubyString(context, value).asString(), this);
 	}
 
 	@JRubyMethod(name = { "prefix" })
 	public IRubyObject getPrefix(ThreadContext context) {
-		return this.prefix == null ? context.getRuntime().getNil() : this.prefix;
+		return UtilJ.nvl(this.prefix, context.getRuntime().getNil());
 	}
 
 	@JRubyMethod(name = { "href" })
 	public IRubyObject getHref(ThreadContext context) {
-		return this.href == null ? context.getRuntime().getNil() : this.href;
+		return UtilJ.nvl(this.href, context.getRuntime().getNil());
 	}
 
 	@JRubyMethod(name = { "node" })
