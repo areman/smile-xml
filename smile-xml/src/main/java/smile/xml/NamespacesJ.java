@@ -2,8 +2,8 @@ package smile.xml;
 
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
-import org.jruby.RubyModule;
 import org.jruby.RubyObject;
+import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
@@ -11,8 +11,10 @@ import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+
 import smile.xml.util.UtilJ;
 
+@JRubyClass( name="LibXML::XML::Namespaces" )
 public class NamespacesJ extends RubyObject {
 	
 	private static final long serialVersionUID = 4673137342270845475L;
@@ -22,24 +24,21 @@ public class NamespacesJ extends RubyObject {
 			return new NamespacesJ(runtime, klass);
 		}
 	};
-	
-	private NodeJ node;
 
 	public static RubyClass define(Ruby runtime) {
-		RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML", "XML" });
-		RubyClass result = module.defineClassUnder("Namespaces", runtime.getObject(), ALLOCATOR);
-		result.defineAnnotatedMethods(NamespacesJ.class);
-		return result;
+		return UtilJ.defineClass(runtime, NamespacesJ.class, ALLOCATOR);
 	}
 
 	private static RubyClass getRubyClass(Ruby runtime) {
-		return UtilJ.getClass(runtime, new String[] { "LibXML", "XML", "Namespaces" });
+		return UtilJ.getClass(runtime, NamespacesJ.class);
 	}
 
 	public static NamespacesJ newInstance(ThreadContext context, NodeJ node) {
 		IRubyObject[] args = { node };
 		return (NamespacesJ) getRubyClass(context.getRuntime()).newInstance(context, args, null);
 	}
+	
+	private NodeJ node;
 
 	public NamespacesJ(Ruby runtime, RubyClass metaClass) {
 		super(runtime, metaClass);

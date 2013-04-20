@@ -3,9 +3,9 @@ package smile.xml;
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyFixnum;
-import org.jruby.RubyModule;
 import org.jruby.RubyObject;
 import org.jruby.RubyString;
+import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
@@ -13,6 +13,7 @@ import org.jruby.runtime.builtin.IRubyObject;
 
 import smile.xml.util.UtilJ;
 
+@JRubyClass( name="LibXML::XML::Namespace" )
 public class NamespaceJ extends RubyObject {
 	
 	private static final long serialVersionUID = 4128551928821799987L;
@@ -22,26 +23,23 @@ public class NamespaceJ extends RubyObject {
 			return new NamespaceJ(runtime, klass);
 		}
 	};
-	
-	private NodeJ node;
-	private RubyString prefix;
-	private RubyString href;
 
 	public static RubyClass define(Ruby runtime) {
-		RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML", "XML" });
-		RubyClass result = module.defineClassUnder("Namespace",	runtime.getObject(), ALLOCATOR);
-		result.defineAnnotatedMethods(NamespaceJ.class);
-		return result;
+		return UtilJ.defineClass(runtime, NamespaceJ.class, ALLOCATOR);
 	}
 
 	private static RubyClass getRubyClass(Ruby runtime) {
-		return UtilJ.getClass(runtime, new String[] { "LibXML", "XML", "Namespace" });
+		return UtilJ.getClass(runtime, NamespaceJ.class);
 	}
 
 	public static NamespaceJ newInstance(ThreadContext context,	IRubyObject node, IRubyObject prefix, IRubyObject href) {
 		IRubyObject[] args = { node, prefix, href };
 		return (NamespaceJ) getRubyClass(context.getRuntime()).newInstance(context, args, null);
 	}
+	
+	private NodeJ node;
+	private RubyString prefix;
+	private RubyString href;
 
 	public NamespaceJ(Ruby runtime, RubyClass metaClass) {
 		super(runtime, metaClass);
@@ -106,8 +104,12 @@ public class NamespaceJ extends RubyObject {
 	
 	@JRubyMethod(name = { "to_s" })
 	public IRubyObject toS(ThreadContext context) {
-		if (prefix != null)
-			return context.getRuntime().newString((prefix.asJavaString() + ":" + href.asJavaString()));
-		return context.getRuntime().newString(href.asJavaString());
+		String str;
+		if (prefix != null) {
+			str = prefix.asJavaString() + ":" + href.asJavaString();
+		} else {
+			str = href.asJavaString();
+		}		
+		return context.getRuntime().newString(str);
 	}
 }
