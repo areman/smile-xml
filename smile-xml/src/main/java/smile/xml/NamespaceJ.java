@@ -57,21 +57,11 @@ public class NamespaceJ extends RubyObject {
 		if (! pPrefix.isNil()) {
 			prefix = (RubyString) pPrefix;	
 		}
-		if (! pHref.isNil()) {
-			href = (RubyString) pHref;
-		}
-		
-		String name = "xmlns";
-		if (prefix != null) {
-			name = name + ":" + prefix.asJavaString();
-		}
-		
-		String value = "";
-		if (href != null) {
-			value = href.asJavaString();
-		}
+		href = (RubyString) pHref;
 		
 		// define namespace as "xmlns" attribute
+		String name = prefix == null ? "xmlns" : "xmlns:" + prefix.asJavaString();
+		String value = href.asJavaString();
 		AttrJ.newInstance(context, node, UtilJ.toRubyString(context, name).asString(), 
 				UtilJ.toRubyString(context, value).asString(), this);
 	}
@@ -112,5 +102,12 @@ public class NamespaceJ extends RubyObject {
 			}
 		}
 		return context.getRuntime().getFalse();
+	}
+	
+	@JRubyMethod(name = { "to_s" })
+	public IRubyObject toS(ThreadContext context) {
+		if (prefix != null)
+			return context.getRuntime().newString((prefix.asJavaString() + ":" + href.asJavaString()));
+		return context.getRuntime().newString(href.asJavaString());
 	}
 }
