@@ -212,7 +212,7 @@ public class NodeJ extends BaseJ<Node> {
 	}
 
 	@JRubyMethod(name = "equal?")
-	public RubyBoolean isEqlual(ThreadContext context, IRubyObject arg)
+	public RubyBoolean isEqual(ThreadContext context, IRubyObject arg)
 			throws Exception {
 
 		if (arg.isNil()) {
