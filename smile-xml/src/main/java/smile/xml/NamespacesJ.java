@@ -89,13 +89,17 @@ public class NamespacesJ extends RubyObject {
 	public IRubyObject getNamespace(ThreadContext context) {
 		Ruby run = context.getRuntime();
 
-		String tmp = ((Node) this.node.getJavaObject()).getPrefix();
-		IRubyObject prefix = tmp == null ? run.getNil() : run.newString(tmp);
+		String prefixStr = ((Node) node.getJavaObject()).getPrefix();
+		IRubyObject prefix = prefixStr == null ? run.getNil() : run.newString(prefixStr);
 
-		tmp = ((Node) this.node.getJavaObject()).getNamespaceURI();
-		IRubyObject uri = tmp == null ? run.getNil() : run.newString(tmp);
-
-		return NamespaceJ.newInstance(context, this.node, prefix, uri);
+		String uriStr = ((Node) node.getJavaObject()).getNamespaceURI();
+		IRubyObject uri = uriStr == null ? run.getNil() : run.newString(uriStr);
+		
+		if (uri.isNil()) {
+			return run.getNil();
+		} else {
+			return NamespaceJ.newInstance(context, node, prefix, uri);
+		}
 	}
 	
 	@JRubyMethod(name = { "namespace=" })
@@ -115,7 +119,7 @@ public class NamespacesJ extends RubyObject {
 		if (! namespace.getPrefix(context).isNil()) {
 			qualifiedName = namespace.getPrefix(context).asJavaString() + ":" + node.getJavaObject().getNodeName();
 		}
-		doc.renameNode(node.getJavaObject(), namespaceURI, qualifiedName);
+		node.setJavaObject(doc.renameNode(node.getJavaObject(), namespaceURI, qualifiedName));
 	}
 	
 	@JRubyMethod(name = { "node" })
