@@ -14,7 +14,7 @@ import org.w3c.dom.Node;
 
 import smile.xml.util.UtilJ;
 
-@JRubyClass( name="LibXML::XML::Namespaces" )
+@JRubyClass( name = "LibXML::XML::Namespaces", include = "Enumerable" )
 public class NamespacesJ extends RubyObject {
 	
 	private static final long serialVersionUID = 4673137342270845475L;
