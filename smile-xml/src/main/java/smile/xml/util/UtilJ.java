@@ -41,6 +41,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import smile.xml.AttrJ;
 import smile.xml.EncodingJ;
 
 public class UtilJ {
@@ -430,5 +431,17 @@ public class UtilJ {
 			return "nil";
 		}
 		return rObject.getMetaClass().asString().asJavaString();
+	}
+	
+	public static boolean isNamespace(Node node) {
+		String name = node.getNodeName();
+		if (name.startsWith("xmlns:") || name.equals("xmlns")) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isAttr(Node node) {
+		return ! isNamespace(node);
 	}
 }

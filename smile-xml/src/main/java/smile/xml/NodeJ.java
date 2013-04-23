@@ -128,16 +128,28 @@ public class NodeJ extends BaseJ<Node> {
 
 	@JRubyMethod(name = { "initialize" }, optional = 3)
 	public void initialize(ThreadContext context, IRubyObject[] args) {
-		RubyString name = (RubyString) (args.length > 0 ? args[0] : null);
-		RubyString content = (RubyString) (args.length > 1 ? args[1] : null);
-		NamespaceJ namespace = (NamespaceJ) (args.length > 2 ? args[2] : null);
-
+		RubyString name = (RubyString) (args.length > 0 && ! args[0].isNil() ? args[0] : null);
+		RubyString content = (RubyString) (args.length > 1 && ! args[1].isNil() ? args[1] : null);
+		NamespaceJ ns = (NamespaceJ) (args.length > 2 && ! args[2].isNil() ? args[2] : null);
+		
 		if (name != null) {
 			Document doc = UtilJ.getBuilder().newDocument();
 			Element element = doc.createElement(name.asJavaString());
 			if ((content != null) && (!content.isNil()))
 				element.setTextContent(content.asJavaString());
 			setJavaObject(element);
+			
+			if (ns != null && ! ns.isNil()) {
+				String namespaceURI = "";
+				String qualifiedName = getJavaObject().getNodeName();
+				if (! ns.getHref(context).isNil()) {
+					namespaceURI = ns.getHref(context).asJavaString();
+				}
+				if (! ns.getPrefix(context).isNil()) {
+					qualifiedName = ns.getPrefix(context).asJavaString() + ":" + getJavaObject().getNodeName();
+				}
+				setJavaObject(doc.renameNode(getJavaObject(), namespaceURI, qualifiedName));
+			}
 		}
 	}
 
