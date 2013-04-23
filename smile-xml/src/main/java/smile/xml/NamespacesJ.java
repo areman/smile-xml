@@ -1,5 +1,8 @@
 package smile.xml;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyObject;
@@ -10,6 +13,7 @@ import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import smile.xml.util.UtilJ;
@@ -46,13 +50,12 @@ public class NamespacesJ extends RubyObject {
 
 	@JRubyMethod(name = { "initialize" })
 	public void initialize(ThreadContext context, IRubyObject pNode) {
-		this.node = ((NodeJ) pNode);
+		this.node = (NodeJ) pNode;
 	}
 	
 	@JRubyMethod(name = { "default" })
 	public IRubyObject getDefault(ThreadContext context) {
-		// TODO
-		throw context.getRuntime().newRuntimeError("not yet implemented");
+		return findByPrefix(context, context.getRuntime().getNil());
 	}
 	
 	@JRubyMethod(name = { "default_prefix=" })
@@ -68,9 +71,8 @@ public class NamespacesJ extends RubyObject {
 	}
 	
 	@JRubyMethod(name = { "each" })
-	public IRubyObject each(ThreadContext context, Block block) {
-		// TODO
-		throw context.getRuntime().newRuntimeError("not yet implemented");
+	public void iterateOver(ThreadContext context, Block block) {
+		UtilJ.iterateOver(context, block, namespacesAsList(context));
 	}
 	
 	@JRubyMethod(name = { "find_by_href" })
@@ -125,5 +127,32 @@ public class NamespacesJ extends RubyObject {
 	@JRubyMethod(name = { "node" })
 	public IRubyObject getNode(ThreadContext context) {
 		return this.node;
+	}
+	
+	private List<NamespaceJ> namespacesAsList(ThreadContext context) {
+		NamedNodeMap attributes = node.getJavaObject().getAttributes();
+		List<NamespaceJ> list = new ArrayList<NamespaceJ>();
+		for (int i = 0; i < attributes.getLength(); i++) {
+			Node item = attributes.item(i);
+			String name = item.getNodeName();
+			if (name.startsWith("xmlns")) {
+				NamespaceJ ns = NamespaceJ.newInstance(context);
+				String prefix;
+				if (name.startsWith("xmlns:")) {
+					prefix = name.substring("xmlns:".length());
+					ns.setPrefix(context.getRuntime().newString(prefix));
+				} else if (name.equals("xmlns")) {
+					prefix = null;
+					ns.setPrefix(null);
+				} else {
+					continue;
+				}
+				ns.setNode(node);
+				String href = item.getNodeValue();
+				ns.setHref(context.getRuntime().newString(href));
+				list.add(ns);
+			}
+		}
+		return list;
 	}
 }

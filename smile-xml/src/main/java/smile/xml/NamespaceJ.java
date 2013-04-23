@@ -31,6 +31,10 @@ public class NamespaceJ extends RubyObject {
 	private static RubyClass getRubyClass(Ruby runtime) {
 		return UtilJ.getClass(runtime, NamespaceJ.class);
 	}
+	
+	public static NamespaceJ newInstance(ThreadContext context) {
+		return new NamespaceJ(context.getRuntime(), getRubyClass(context.getRuntime()));
+	}
 
 	public static NamespaceJ newInstance(ThreadContext context,	IRubyObject node, IRubyObject prefix, IRubyObject href) {
 		IRubyObject[] args = { node, prefix, href };
@@ -112,5 +116,17 @@ public class NamespaceJ extends RubyObject {
 			str = href.asJavaString();
 		}		
 		return context.getRuntime().newString(str);
+	}
+	
+	public void setNode(NodeJ node) {
+		this.node = node;
+	}
+	
+	public void setPrefix(RubyString prefix) {
+		this.prefix = prefix;
+	}
+	
+	public void setHref(RubyString href) {
+		this.href = href;
 	}
 }
