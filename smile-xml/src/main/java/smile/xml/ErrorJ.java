@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyException;
-import org.jruby.RubyModule;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyConstant;
 import org.jruby.anno.JRubyMethod;
@@ -29,26 +28,6 @@ public class ErrorJ extends RubyException {
 	};
 
 	private static final AtomicReference<Block> handler = new AtomicReference<Block>();
-
-	public static RubyClass define(Ruby runtime) {
-		return UtilJ.defineClass(runtime, ErrorJ.class, ALLOCATOR);
-	}
-
-	private static RubyClass getRubyClass(Ruby runtime) {
-		return UtilJ.getClass(runtime, ErrorJ.class );
-	}
-
-	public static RaiseException newRaiseException(ThreadContext context,
-			String message) {
-		Ruby run = context.getRuntime();
-		return new RaiseException(run, getRubyClass(context.getRuntime()), message, true);
-	}
-
-	public static RubyException newInstance(ThreadContext context,
-			String message) {
-		return RubyException.newException(context.getRuntime(),getRubyClass(context.getRuntime()), message);
-	}
-
 	
 	@JRubyConstant
 	public static final IRubyObject VERBOSE_HANDLER = null;
@@ -77,8 +56,23 @@ public class ErrorJ extends RubyException {
 	@JRubyConstant
 	public static final IRubyObject ERROR = null;
 	
+	public static RubyClass define(Ruby runtime) {
+		return UtilJ.defineClass(runtime, ErrorJ.class, ALLOCATOR);
+	}
 
-	
+	private static RubyClass getRubyClass(Ruby runtime) {
+		return UtilJ.getClass(runtime, ErrorJ.class );
+	}
+
+	public static RaiseException newRaiseException(ThreadContext context, String message) {
+		Ruby run = context.getRuntime();
+		return new RaiseException(run, getRubyClass(run), message, true);
+	}
+
+	public static RubyException newInstance(ThreadContext context, String message) {
+		Ruby run = context.getRuntime();
+		return RubyException.newException(run, getRubyClass(run), message);
+	}
 	
 	private ErrorJ(Ruby runtime, RubyClass metaClass) {
 		super(runtime, metaClass);
@@ -151,7 +145,6 @@ public class ErrorJ extends RubyException {
 
 	@JRubyMethod(name = "reset_handler", module=true)
 	public static void resetHandler(ThreadContext context, IRubyObject self) {
-
 		handler.set(null);
 	}
 

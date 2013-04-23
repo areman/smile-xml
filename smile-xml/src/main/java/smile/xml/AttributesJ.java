@@ -122,14 +122,18 @@ public class AttributesJ extends BaseJ<Node> {
 
 	@JRubyMethod(name = { "first" })
 	public IRubyObject first(ThreadContext context) {
-		if (getJavaObject().getAttributes().getLength() == 0) {
-			return context.getRuntime().getNil();
+		AttrJ attr = null;
+		NamedNodeMap attributes = getJavaObject().getAttributes();
+		for (int i = 0; i < attributes.getLength(); i++) {
+			Node item = attributes.item(i);
+			if (UtilJ.isAttr(item)) {
+				attr = AttrJ.newInstance(context);
+				attr.setJavaObject(item);
+				attr.setParent(parent);
+				break;
+			}
 		}
-		AttrJ attr = AttrJ.newInstance(context);
-		NamedNodeMap aa = getJavaObject().getAttributes();
-		attr.setJavaObject(aa.item(0));
-		attr.setParent(parent);
-		return attr;
+		return UtilJ.nvl(attr, context.getRuntime().getNil());
 	}
 
 	@JRubyMethod(name = { "get_attribute" })
@@ -172,9 +176,8 @@ public class AttributesJ extends BaseJ<Node> {
 
 	@JRubyMethod(name = { "length" })
 	public RubyFixnum getLength(ThreadContext context) {
-		int r = ((Node) getJavaObject()).getAttributes() == null ? 0
-				: ((Node) getJavaObject()).getAttributes().getLength();
-		return context.getRuntime().newFixnum(r);
+		int length = attributesAsList(context).size();
+		return context.getRuntime().newFixnum(length);
 	}
 
 	@JRubyMethod(name = { "node" })
@@ -199,14 +202,18 @@ public class AttributesJ extends BaseJ<Node> {
 	}
 
 	private List<AttrJ> attributesAsList(ThreadContext context) {
-		NamedNodeMap list = ((Node) getJavaObject()).getAttributes();
-		List array = new ArrayList(list.getLength());
-		for (int i = 0; i < list.getLength(); i++) {
+		NamedNodeMap attributes = ((Node) getJavaObject()).getAttributes();
+		List<AttrJ> list = new ArrayList<AttrJ>();
+		for (int i = 0; i < attributes.getLength(); i++) {
+			Node item = attributes.item(i);
+			if (! UtilJ.isAttr(item)) {
+				continue;
+			}
 			AttrJ node = AttrJ.newInstance(context);
-			node.setJavaObject(list.item(i));
+			node.setJavaObject(item);
 			node.setParent(parent);
-			array.add(node);
+			list.add(node);
 		}
-		return array;
+		return list;
 	}
 }

@@ -38,6 +38,11 @@ public class AttrJ extends NodeJ {
 		return (AttrJ) getRubyClass(context.getRuntime()).newInstance(context,
 				new IRubyObject[0], null);
 	}
+	
+	public static AttrJ newInstance(ThreadContext context, NodeJ node, RubyString name, RubyString value, NamespaceJ ns) {
+		IRubyObject[] args = { node, name, value, ns };
+		return (AttrJ) getRubyClass(context.getRuntime()).newInstance(context, args, null);
+	}
 
 	private NodeJ parent;
 	
@@ -51,7 +56,7 @@ public class AttrJ extends NodeJ {
 	
 	@JRubyMethod(name = "initialize", optional = 4)
 	public void initialize(ThreadContext context, IRubyObject[] args) {
-		NodeJ node = (NodeJ) (NodeJ) (args.length > 0 ? args[0] : null);
+		NodeJ node = (NodeJ) (args.length > 0 ? args[0] : null);
 		RubyString name = (RubyString) (args.length > 1 ? args[1] : null);
 		RubyString value = (RubyString) (args.length > 2 ? args[2] : null);
 		NamespaceJ ns = (NamespaceJ) (args.length > 3 ? args[3] : null);

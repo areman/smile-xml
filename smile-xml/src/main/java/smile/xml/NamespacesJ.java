@@ -1,62 +1,158 @@
 package smile.xml;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
-import org.jruby.RubyModule;
 import org.jruby.RubyObject;
+import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
+import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+
 import smile.xml.util.UtilJ;
 
-public class NamespacesJ extends RubyObject
-{
-  private static final long serialVersionUID = 4673137342270845475L;
-  private static final ObjectAllocator ALLOCATOR = new ObjectAllocator()
-  {
-    public IRubyObject allocate(Ruby runtime, RubyClass klass)
-    {
-      return new NamespacesJ(runtime, klass);
-    } } ;
-  private NodeJ node;
+@JRubyClass( name = "LibXML::XML::Namespaces", include = "Enumerable" )
+public class NamespacesJ extends RubyObject {
+	
+	private static final long serialVersionUID = 4673137342270845475L;
+	
+	private static final ObjectAllocator ALLOCATOR = new ObjectAllocator() {
+		public IRubyObject allocate(Ruby runtime, RubyClass klass) {
+			return new NamespacesJ(runtime, klass);
+		}
+	};
 
-  public static RubyClass define(Ruby runtime) { RubyModule module = UtilJ.getModule(runtime, new String[] { "LibXML", "XML" });
-    RubyClass result = module.defineClassUnder("Namespaces", runtime.getObject(), ALLOCATOR);
-    result.defineAnnotatedMethods(NamespacesJ.class);
-    return result; }
+	public static RubyClass define(Ruby runtime) {
+		return UtilJ.defineClass(runtime, NamespacesJ.class, ALLOCATOR);
+	}
 
-  private static RubyClass getRubyClass(Ruby runtime)
-  {
-    return UtilJ.getClass(runtime, new String[] { "LibXML", "XML", "Namespaces" });
-  }
+	private static RubyClass getRubyClass(Ruby runtime) {
+		return UtilJ.getClass(runtime, NamespacesJ.class);
+	}
 
-  public static NamespacesJ newInstance(ThreadContext context, NodeJ node)
-  {
-    IRubyObject[] args = { node };
-    return (NamespacesJ)getRubyClass(context.getRuntime()).newInstance(context, args, null);
-  }
+	public static NamespacesJ newInstance(ThreadContext context, NodeJ node) {
+		IRubyObject[] args = { node };
+		return (NamespacesJ) getRubyClass(context.getRuntime()).newInstance(context, args, null);
+	}
+	
+	private NodeJ node;
 
-  public NamespacesJ(Ruby runtime, RubyClass metaClass)
-  {
-    super(runtime, metaClass);
-  }
-  @JRubyMethod(name={"initialize"})
-  public void initialize(ThreadContext context, IRubyObject pNode) {
-    this.node = ((NodeJ)pNode);
-  }
+	public NamespacesJ(Ruby runtime, RubyClass metaClass) {
+		super(runtime, metaClass);
+	}
 
-  @JRubyMethod(name={"namespace"})
-  public IRubyObject getNamespace(ThreadContext context) {
-    Ruby run = context.getRuntime();
+	@JRubyMethod(name = { "initialize" })
+	public void initialize(ThreadContext context, IRubyObject pNode) {
+		this.node = (NodeJ) pNode;
+	}
+	
+	@JRubyMethod(name = { "default" })
+	public IRubyObject getDefault(ThreadContext context) {
+		return findByPrefix(context, context.getRuntime().getNil());
+	}
+	
+	@JRubyMethod(name = { "default_prefix=" })
+	public void setDefaultPrefix(ThreadContext context, IRubyObject pPrefix) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
+	
+	@JRubyMethod(name = { "definitions" })
+	public IRubyObject getDefinitions(ThreadContext context) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
+	
+	@JRubyMethod(name = { "each" })
+	public void iterateOver(ThreadContext context, Block block) {
+		UtilJ.iterateOver(context, block, namespacesAsList(context));
+	}
+	
+	@JRubyMethod(name = { "find_by_href" })
+	public IRubyObject findByHref(ThreadContext context, IRubyObject pHref) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
+	
+	@JRubyMethod(name = { "find_by_prefix" }, optional = 1)
+	public IRubyObject findByPrefix(ThreadContext context, IRubyObject pPrefix) {
+		// TODO
+		throw context.getRuntime().newRuntimeError("not yet implemented");
+	}
 
-    String tmp = ((Node)this.node.getJavaObject()).getPrefix();
-    IRubyObject prefix = tmp == null ? run.getNil() : run.newString(tmp);
+	@JRubyMethod(name = { "namespace" })
+	public IRubyObject getNamespace(ThreadContext context) {
+		Ruby run = context.getRuntime();
 
-    tmp = ((Node)this.node.getJavaObject()).getNamespaceURI();
-    IRubyObject uri = tmp == null ? run.getNil() : run.newString(tmp);
+		String prefixStr = ((Node) node.getJavaObject()).getPrefix();
+		IRubyObject prefix = prefixStr == null ? run.getNil() : run.newString(prefixStr);
 
-    return NamespaceJ.newInstance(context, this.node, prefix, uri);
-  }
+		String uriStr = ((Node) node.getJavaObject()).getNamespaceURI();
+		IRubyObject uri = uriStr == null ? run.getNil() : run.newString(uriStr);
+		
+		if (uri.isNil()) {
+			return run.getNil();
+		} else {
+			return NamespaceJ.newInstance(context, node, prefix, uri);
+		}
+	}
+	
+	@JRubyMethod(name = { "namespace=" })
+	public void setNamespace(ThreadContext context, IRubyObject pNamespace) {
+		if ( ! (pNamespace instanceof NamespaceJ)) {
+			throw context.getRuntime().newTypeError("wrong argument type " + UtilJ.getRubyClassName(pNamespace) + " (expected Data)");
+		}
+		
+		NamespaceJ namespace = (NamespaceJ) pNamespace;
+		Document doc = node.getJavaObject().getOwnerDocument();
+		
+		String namespaceURI = "";
+		String qualifiedName = node.getJavaObject().getNodeName();
+		if (! namespace.getHref(context).isNil()) {
+			namespaceURI = namespace.getHref(context).asJavaString();
+		}
+		if (! namespace.getPrefix(context).isNil()) {
+			qualifiedName = namespace.getPrefix(context).asJavaString() + ":" + node.getJavaObject().getNodeName();
+		}
+		node.setJavaObject(doc.renameNode(node.getJavaObject(), namespaceURI, qualifiedName));
+	}
+	
+	@JRubyMethod(name = { "node" })
+	public IRubyObject getNode(ThreadContext context) {
+		return this.node;
+	}
+	
+	private List<NamespaceJ> namespacesAsList(ThreadContext context) {
+		NamedNodeMap attributes = node.getJavaObject().getAttributes();
+		List<NamespaceJ> list = new ArrayList<NamespaceJ>();
+		for (int i = 0; i < attributes.getLength(); i++) {
+			Node item = attributes.item(i);
+			String name = item.getNodeName();
+			if (name.startsWith("xmlns")) {
+				NamespaceJ ns = NamespaceJ.newInstance(context);
+				String prefix;
+				if (name.startsWith("xmlns:")) {
+					prefix = name.substring("xmlns:".length());
+					ns.setPrefix(context.getRuntime().newString(prefix));
+				} else if (name.equals("xmlns")) {
+					prefix = null;
+					ns.setPrefix(null);
+				} else {
+					continue;
+				}
+				ns.setNode(node);
+				String href = item.getNodeValue();
+				ns.setHref(context.getRuntime().newString(href));
+				list.add(ns);
+			}
+		}
+		return list;
+	}
 }

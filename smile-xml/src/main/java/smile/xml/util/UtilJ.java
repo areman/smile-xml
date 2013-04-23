@@ -41,6 +41,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import smile.xml.AttrJ;
 import smile.xml.EncodingJ;
 
 public class UtilJ {
@@ -231,16 +232,17 @@ public class UtilJ {
 		}
 	}
 
-	public static void write( Writer writer, Node node, boolean intent, String encoding ) {
+	public static void write( Writer writer, Node node, boolean indent, String encoding) {
 		try {
 				StreamResult result = new StreamResult(writer);
 				DOMSource source = new DOMSource(node);
 				Transformer transformer = getTransformer();
 				
+				transformer.setOutputProperty(OutputKeys.INDENT, indent ? "yes" : "no");
+				
 				if( encoding != null ) {
 					transformer.setOutputProperty( OutputKeys.ENCODING, encoding );
 				}
-				
 				
 				transformer.transform( source, result);				
 				
@@ -252,21 +254,23 @@ public class UtilJ {
 	}
 
 
-	public static String toString(Node node, boolean escape ) {
-		return toString( node, escape, (String) null );
+	public static String toString(Node node, boolean indent) {
+		return toString(node, indent, (String) null );
 	}
 	
-	public static String toString(Node node, boolean escape, EncodingJ encoding ) {
-		return toString( node, escape, encoding == null ? null : encoding.asJavaString() );
+	public static String toString(Node node, boolean indent, EncodingJ encoding) {
+		return toString(node, indent, encoding == null ? null : encoding.asJavaString() );
 	}
 	
-	public static String toString(Node node, boolean escape, String encoding ) {
+	public static String toString(Node node, boolean indent, String encoding) {
 		StringWriter writer = new StringWriter();
 		try {
 			try { 
 				StreamResult result = new StreamResult(writer);
 				DOMSource source = new DOMSource(node);
 				Transformer transformer = getTransformer();
+				
+				transformer.setOutputProperty(OutputKeys.INDENT, indent ? "yes" : "no");
 				
 				//OMIT_XML_DECLARATION
 				if( encoding != null )
@@ -420,5 +424,24 @@ public class UtilJ {
 		}
 		
 		return null;
+	}
+	
+	public static String getRubyClassName(IRubyObject rObject) {
+		if (rObject.isNil()) {
+			return "nil";
+		}
+		return rObject.getMetaClass().asString().asJavaString();
+	}
+	
+	public static boolean isNamespace(Node node) {
+		String name = node.getNodeName();
+		if (name.startsWith("xmlns:") || name.equals("xmlns")) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isAttr(Node node) {
+		return ! isNamespace(node);
 	}
 }

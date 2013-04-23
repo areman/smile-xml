@@ -75,10 +75,12 @@ public class NodeJ extends BaseJ<Node> {
 
 	@JRubyConstant
 	public static final int NOTATION_NODE = 12;
+	
+	@JRubyConstant
+	public static final int NAMESPACE_DECL = 18;
 
 	@JRubyConstant
 	public static final int PROCESSING_INSTRUCTION_NODE = 7;
-
 
 	@JRubyConstant
 	public static final int FRAGMENT_NODE = 11;
@@ -126,16 +128,28 @@ public class NodeJ extends BaseJ<Node> {
 
 	@JRubyMethod(name = { "initialize" }, optional = 3)
 	public void initialize(ThreadContext context, IRubyObject[] args) {
-		RubyString name = (RubyString) (RubyString) (args.length > 0 ? args[0] : null);
-		RubyString content = (RubyString) (RubyString) (args.length > 1 ? args[1] : null);
-		NamespaceJ namespace = (NamespaceJ) (NamespaceJ) (args.length > 2 ? args[2] : null);
-
+		RubyString name = (RubyString) (args.length > 0 && ! args[0].isNil() ? args[0] : null);
+		RubyString content = (RubyString) (args.length > 1 && ! args[1].isNil() ? args[1] : null);
+		NamespaceJ ns = (NamespaceJ) (args.length > 2 && ! args[2].isNil() ? args[2] : null);
+		
 		if (name != null) {
 			Document doc = UtilJ.getBuilder().newDocument();
-			Element elemet = doc.createElement(name.asJavaString());
+			Element element = doc.createElement(name.asJavaString());
 			if ((content != null) && (!content.isNil()))
-				elemet.setTextContent(content.asJavaString());
-			setJavaObject(elemet);
+				element.setTextContent(content.asJavaString());
+			setJavaObject(element);
+			
+			if (ns != null && ! ns.isNil()) {
+				String namespaceURI = "";
+				String qualifiedName = getJavaObject().getNodeName();
+				if (! ns.getHref(context).isNil()) {
+					namespaceURI = ns.getHref(context).asJavaString();
+				}
+				if (! ns.getPrefix(context).isNil()) {
+					qualifiedName = ns.getPrefix(context).asJavaString() + ":" + getJavaObject().getNodeName();
+				}
+				setJavaObject(doc.renameNode(getJavaObject(), namespaceURI, qualifiedName));
+			}
 		}
 	}
 
@@ -210,7 +224,7 @@ public class NodeJ extends BaseJ<Node> {
 	}
 
 	@JRubyMethod(name = "equal?")
-	public RubyBoolean isEqlual(ThreadContext context, IRubyObject arg)
+	public RubyBoolean isEqual(ThreadContext context, IRubyObject arg)
 			throws Exception {
 
 		if (arg.isNil()) {
@@ -252,8 +266,7 @@ public class NodeJ extends BaseJ<Node> {
 		boolean r = toString(context, new IRubyObject[0]).equals(
 				other.toString(context, new IRubyObject[0]));
 
-		return r ? context.getRuntime().getTrue() : context.getRuntime()
-				.getFalse();
+		return UtilJ.toBool(context, r);
 	}
 
 	@JRubyMethod(name ="detect")
@@ -333,9 +346,8 @@ public class NodeJ extends BaseJ<Node> {
 
 	@JRubyMethod(name = { "attribute?" })
 	public RubyBoolean isAttribute(ThreadContext context) {
-		boolean r = ((Node) getJavaObject()).getNodeType() == 2;
-		return r ? context.getRuntime().getTrue() : context.getRuntime()
-				.getFalse();
+		boolean r = ((Node) getJavaObject()).getNodeType() == ATTRIBUTE_NODE;
+		return UtilJ.toBool(context, r);
 	}
 
 	@JRubyMethod(name = { "attribute_decl?" })
@@ -354,8 +366,7 @@ public class NodeJ extends BaseJ<Node> {
 	@JRubyMethod(name = { "attributes?" }, alias = { "properties?" })
 	public RubyBoolean hasAttributes(ThreadContext context) {
 		boolean r = ((Node) getJavaObject()).getAttributes().getLength() != 0;
-		return r ? context.getRuntime().getTrue() : context.getRuntime()
-				.getFalse();
+		return UtilJ.toBool(context, r);
 	}
 
 //	@JRubyMethod(name ="base_uri")
@@ -681,7 +692,7 @@ public class NodeJ extends BaseJ<Node> {
 		return UtilJ.toBool(context, false);
 	}
 
-	@JRubyMethod(name = { "namespacess=" })
+	@JRubyMethod(name = { "namespaces" })
 	public NamespacesJ getNamespaces(ThreadContext context) {
 		return NamespacesJ.newInstance(context, this);
 	}
