@@ -321,25 +321,25 @@ public class DocumentJ extends BaseJ<Document> {
 
 	@JRubyMethod(name="to_s", rest=true)
 	public RubyString toString(ThreadContext context, IRubyObject[] args ) throws Exception {
-		RubyBoolean indent;
-		EncodingJ   encoding = null;
+		Boolean indent = null;
+		EncodingJ encoding = null;
 		if( args.length > 0 ) {
 			if( args[0] instanceof RubyHash ) {
 				RubyHash hash = (RubyHash) args[0];
 				RubySymbol key = context.getRuntime().newSymbol( "indent" );
-				indent = toRubyBool( context, hash.get( key ) );
+				indent = UtilJ.toJavaBoolean(context, hash.get(key));
 				key = context.getRuntime().newSymbol( "encoding" );
 				encoding = EncodingJ.get(context, hash.get( key ) );
 			} else if( args[0] instanceof RubyBoolean ) {
-				indent = (RubyBoolean) args[0];
+				indent = UtilJ.toJavaBoolean(context, args[0]);
 			} else if( args[0] instanceof RubyNil ) {
-				
+				// do nothing
 			} else {
 				throw context.getRuntime().newArgumentError("");
 			}
 		}
 
-		String string = UtilJ.toString( getJavaObject(), true, encoding );
+		String string = UtilJ.toString( getJavaObject(), nvl(indent, true), encoding );
 		return context.getRuntime().newString(string);
 	}
 
