@@ -2,10 +2,10 @@ Dir.chdir( 'dist' )
 
 Gem::Specification.new do |gem|
   
-  gem.platform = 'jruby'
+  gem.platform = 'java'
   gem.name     = 'smile-xml'
-  gem.version  = '1.0.2'
-  gem.date     = '2012-07-06'
+  gem.version  = '1.0.3'
+  gem.date     = '2014-02-05'
 
   gem.summary     = "LibXMLRuby compatibility layer for jruby"
   gem.description = ""
