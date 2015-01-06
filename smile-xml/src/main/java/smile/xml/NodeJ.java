@@ -460,14 +460,14 @@ public class NodeJ extends BaseJ<Node> {
 	@JRubyMethod(name = { "children" })
 	public RubyArray getChildren(ThreadContext context) {
 		NodeList list = ((Node) getJavaObject()).getChildNodes();
-		List array = new ArrayList(list.getLength());
+		List<NodeJ> array = new ArrayList<NodeJ>(list.getLength());
 		for (int i = 0; i < list.getLength(); i++) {
 			NodeJ node = newInstance(context);
 			node.setDocPresent(isDocPresent());
 			node.setJavaObject(list.item(i));
 			array.add(node);
 		}
-		return context.getRuntime().newArray(array);
+		return context.getRuntime().newArray((IRubyObject) array);
 	}
 
 	@JRubyMethod(name = "clone", alias = { "copy", "dup" }, rest=true)
@@ -991,7 +991,7 @@ public class NodeJ extends BaseJ<Node> {
 
 	private List<NodeJ> childrenAsList(ThreadContext context) {
 		NodeList list = ((Node) getJavaObject()).getChildNodes();
-		List array = new ArrayList(list.getLength());
+		List<NodeJ> array = new ArrayList<NodeJ>(list.getLength());
 		for (int i = 0; i < list.getLength(); i++) {
 			NodeJ node = newInstance(context);
 			node.setDocPresent(isDocPresent());
@@ -1003,7 +1003,7 @@ public class NodeJ extends BaseJ<Node> {
 
 	private List<NodeJ> attributesAsList(ThreadContext context) {
 		NamedNodeMap list = ((Node) getJavaObject()).getAttributes();
-		List array = new ArrayList(list.getLength());
+		List<NodeJ> array = new ArrayList<NodeJ>(list.getLength());
 		for (int i = 0; i < list.getLength(); i++) {
 			NodeJ node = newInstance(context);
 			node.setDocPresent(isDocPresent());
@@ -1015,7 +1015,7 @@ public class NodeJ extends BaseJ<Node> {
 
 	private List<NodeJ> elementsAsList(ThreadContext context) {
 		NodeList list = ((Node) getJavaObject()).getChildNodes();
-		List array = new ArrayList(list.getLength());
+		List<NodeJ> array = new ArrayList<NodeJ>(list.getLength());
 		for (int i = 0; i < list.getLength(); i++) {
 			Node obj = list.item(i);
 			if (obj.getNodeType() != 1)

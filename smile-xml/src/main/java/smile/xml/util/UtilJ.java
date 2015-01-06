@@ -182,10 +182,10 @@ public class UtilJ {
 		if( path.isEmpty() )
 			return runtime.getObject();
 		
-		RubyModule m = runtime.fastGetModule( path.get(0) ) ;
+		RubyModule m = runtime.getModule( path.get(0) ) ;
 
 		for (int i = 1; i < path.size(); i++) {
-			IRubyObject tmp = m.fastGetConstant( path.get(i) );
+			IRubyObject tmp = m.getConstant( path.get(i) );
 			if (tmp == null) {
 				tmp = m.defineModuleUnder( path.get(i) );
 			}
@@ -208,19 +208,19 @@ public class UtilJ {
 	
 	public static RubyClass getClass(Ruby runtime, List<String> path ) {
 		if (path.size() == 1) {
-			return runtime.fastGetClass( path.get(0) );
+			return runtime.getClass( path.get(0) );
 		}
-		RubyModule m = runtime.fastGetModule( path.get(0) );
+		RubyModule m = runtime.getModule( path.get(0) );
 
 		for (int i = 1; i < path.size() - 1; i++) {
-			IRubyObject tmp = m.fastGetConstant( path.get(i) );
+			IRubyObject tmp = m.getConstant( path.get(i) );
 			if (tmp == null) {
 				tmp = m.defineModuleUnder( path.get(i) );
 			}
 			m = (RubyModule) tmp;
 		}
 
-		return m.fastGetClass( path.get( path.size() - 1) );
+		return m.getClass( path.get( path.size() - 1) );
 	}
 
 	public static void iterateOver(ThreadContext context, Block block, Iterable<?> it) {
@@ -297,7 +297,7 @@ public class UtilJ {
 		if (array == null) {
 			list = new ArrayList(0);
 		} else {
-			if ((array instanceof List)) {
+			if (array instanceof List) {
 				list = (List) array;
 			} else {
 				if (array.getClass().isArray())
@@ -307,17 +307,17 @@ public class UtilJ {
 							array.getClass().getName() + " unsuported");
 			}
 		}
-		List result = new ArrayList();
+		List<IRubyObject> result = new ArrayList<IRubyObject>();
 		for (int i = offset; i < list.size(); i++) {
-			if ((list.get(i) instanceof List))
-				result.addAll((List) list.get(i));
+			if ((list.get(i) instanceof List<?>))
+				result.addAll( (List<IRubyObject>)list.get(i));
 			else if ((list.get(i) instanceof String))
 				result.add(context.getRuntime().newString((String) list.get(i)));
 			else {
 				result.add((IRubyObject) list.get(i));
 			}
 		}
-		ListIterator it = result.listIterator();
+		ListIterator<IRubyObject> it = result.listIterator();
 		while (it.hasNext()) {
 			Object obj = it.next();
 			if ((obj instanceof RubyString))
@@ -391,7 +391,7 @@ public class UtilJ {
 				return builder;
 			}
 		};
-		transformerLocal = new ThreadLocal() {
+		transformerLocal = new ThreadLocal<Transformer>() {
 			protected Transformer initialValue() {
 				try {
 					return UtilJ.getTransformerFactory().newTransformer();
