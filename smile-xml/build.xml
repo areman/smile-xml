@@ -3,7 +3,7 @@
 	<path id="project.class.path">
 		
 		<fileset dir="lib">
-			<include name="jruby-complete-1.6.7.2.jar" />
+			<include name="jruby-complete-1.7.4.jar" />
 		</fileset>
 
 	</path>
@@ -19,6 +19,8 @@
 			destdir="ant_build" 
 			debug="on" includeantruntime="true">
 			<classpath refid="project.class.path" />
+			<compilerarg value="-Xlint:deprecation" /> 
+			<compilerarg value="-Xlint:unchecked" />
 		</javac>
 
 		<mkdir dir="dist/lib" />

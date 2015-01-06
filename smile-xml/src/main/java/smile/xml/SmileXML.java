@@ -3,7 +3,7 @@ package smile.xml;
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyModule;
-import org.jruby.compiler.ir.instructions.THROW_EXCEPTION_Instr;
+//import org.jruby.compiler.ir.instructions.THROW_EXCEPTION_Instr;
 
 import smile.xml.sax.SaxParserCallbacksJ;
 import smile.xml.sax.SaxParserJ;
@@ -17,7 +17,7 @@ public class SmileXML {
 	public static void define(Ruby runtime) {
 		
 		try {
-		RubyModule libxml = runtime.fastGetModule("LibXML");
+		RubyModule libxml = runtime.getModule("LibXML");
 		if (libxml == null) {
 			libxml = runtime.defineModule("LibXML");
 		}

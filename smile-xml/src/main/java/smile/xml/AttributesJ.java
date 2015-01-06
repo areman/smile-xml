@@ -189,7 +189,7 @@ public class AttributesJ extends BaseJ<Node> {
 
 	@JRubyMethod(name = { "to_h" })
 	public RubyHash toHash(ThreadContext context) {
-		Map map = new HashMap();
+		Map<RubyString,RubyString> map = new HashMap<RubyString,RubyString>();
 
 		for (int i = 0; i < ((Node) getJavaObject()).getAttributes()
 				.getLength(); i++) {
