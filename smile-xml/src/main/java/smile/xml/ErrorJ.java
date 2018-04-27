@@ -80,7 +80,7 @@ public class ErrorJ extends RubyException {
 
 	@JRubyMethod(name = "initialize")
 	public void initialize(ThreadContext context, IRubyObject pString) {
-		message = pString;
+		// message = pString;
 	}
 
 	@JRubyMethod(name = "domain")
