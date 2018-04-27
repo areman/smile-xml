@@ -3,14 +3,14 @@
 	<path id="project.class.path">
 		
 		<fileset dir="lib">
-			<include name="jruby-complete-1.6.7.2.jar" />
+			<include name="jruby-complete-9.1.17.0.jar" />
 		</fileset>
 
 	</path>
 
 	<target name="create.jar">
-
-		<!--delete dir="ant_build"/-->
+    
+                <src="https://repo1.maven.org/maven2/org/jruby/jruby-complete/9.1.17.0/jruby-complete-9.1.17.0.jar" dest="lib/jruby-complete-9.1.17.0.jar"/>
 
 		<mkdir dir="ant_build" />
 
