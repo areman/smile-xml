@@ -53,10 +53,10 @@ public class NamespacesJ extends RubyObject {
 		this.node = (NodeJ) pNode;
 	}
 	
-	@JRubyMethod(name = { "default" })
-	public IRubyObject getDefault(ThreadContext context) {
-		return findByPrefix(context, context.getRuntime().getNil());
-	}
+//	@JRubyMethod(name = { "default" })
+//	public IRubyObject getDefault(ThreadContext context) {
+//		return findByPrefix(context, context.getRuntime().getNil());
+//	}
 	
 	@JRubyMethod(name = { "default_prefix=" })
 	public void setDefaultPrefix(ThreadContext context, IRubyObject pPrefix) {
@@ -81,11 +81,11 @@ public class NamespacesJ extends RubyObject {
 		throw context.getRuntime().newRuntimeError("not yet implemented");
 	}
 	
-	@JRubyMethod(name = { "find_by_prefix" }, optional = 1)
-	public IRubyObject findByPrefix(ThreadContext context, IRubyObject pPrefix) {
-		// TODO
-		throw context.getRuntime().newRuntimeError("not yet implemented");
-	}
+//	@JRubyMethod(name = { "find_by_prefix" }, optional = 1)
+//	public IRubyObject findByPrefix(ThreadContext context, IRubyObject pPrefix) {
+//		// TODO
+//		throw context.getRuntime().newRuntimeError("not yet implemented");
+//	}
 
 	@JRubyMethod(name = { "namespace" })
 	public IRubyObject getNamespace(ThreadContext context) {
