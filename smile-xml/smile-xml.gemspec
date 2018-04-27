@@ -4,7 +4,7 @@ Gem::Specification.new do |gem|
   
   gem.platform = 'java'
   gem.name     = 'smile-xml'
-  gem.version  = '1.0.4'
+  gem.version  = '1.0.5'
   gem.date     = '2018-04-27'
 
   gem.summary     = "LibXMLRuby compatibility layer for jruby"
