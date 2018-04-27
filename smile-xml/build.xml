@@ -14,7 +14,7 @@
 
 		<mkdir dir="ant_build" />
 
-		<javac target="1.5" source="1.5" 
+		<javac target="1.8" source="1.8" 
 			srcdir="src/main/java" 
 			destdir="ant_build" 
 			debug="on" includeantruntime="true">
@@ -58,7 +58,7 @@
 			<arg value="-S"/>
 			<arg value="gem"/>
 			<arg value="push"/>
-			<arg value="dist/smile-xml-1.0.2-java.gem"/>
+			<arg value="dist/smile-xml-1.0.4-java.gem"/>
 		</java>
 		
 	</target>
