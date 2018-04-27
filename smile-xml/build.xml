@@ -10,7 +10,7 @@
 
 	<target name="create.jar">
     
-                <src="https://repo1.maven.org/maven2/org/jruby/jruby-complete/9.1.17.0/jruby-complete-9.1.17.0.jar" dest="lib/jruby-complete-9.1.17.0.jar"/>
+                <get src="https://repo1.maven.org/maven2/org/jruby/jruby-complete/9.1.17.0/jruby-complete-9.1.17.0.jar" dest="lib/jruby-complete-9.1.17.0.jar"/>
 
 		<mkdir dir="ant_build" />
 
